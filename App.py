@@ -104,7 +104,8 @@ async def rinomina_canali(interaction: discord.Interaction):
     count = 0
 
     for channel in guild.channels:
-        if isinstance(channel, discord.CategoryCategoryChannel) or isinstance(channel, discord.CategoryChannel):
+        # Corretto: saltiamo correttamente le categorie
+        if isinstance(channel, discord.CategoryChannel):
             continue
 
         extracted_emoji, base_name = extract_emoji_and_name(channel.name)
@@ -127,9 +128,6 @@ async def inverti_ruoli(interaction: discord.Interaction):
     await interaction.response.defer(thinking=True)
     
     guild = interaction.guild
-    
-    # Prende tutti i ruoli escludendo @everyone (che deve restare in fondo per forza)
-    # e il ruolo gestito dal bot stesso (per evitare errori di gerarchia)
     bot_member = guild.me
     managed_roles = [r for r in guild.roles if not r.is_default() and r < bot_member.top_role]
     
@@ -137,20 +135,10 @@ async def inverti_ruoli(interaction: discord.Interaction):
         await interaction.followup.send("Non ci sono ruoli gestibili o inferiori al ruolo del bot da invertire.", ephemeral=True)
         return
 
-    # Inverte la lista dei ruoli
     reversed_roles = list(reversed(managed_roles))
     
-    # Costruisce il dizionario delle posizioni in base all'ordine attuale dei ruoli validi
-    role_positions = {role: role.position for role in managed_roles}
-    
-    # Ordinamento inverso da applicare tramite l'API di Discord
-    # Nota: Discord richiede un dizionario {role: position} o una lista posizionale per la modifica di massa
     try:
-        # Prepariamo la lista invertita mantenendo gli ID originali
-        # Su discord.py possiamo usare guild.edit_role_positions
         positions_dict = {}
-        
-        # Assegniamo le posizioni invertite riciclando i valori numerici esistenti
         original_positions = sorted([role.position for role in managed_roles])
         
         for i, role in enumerate(reversed_roles):
@@ -161,14 +149,19 @@ async def inverti_ruoli(interaction: discord.Interaction):
     except Exception as e:
         await interaction.followup.send(f"Errore durante l'inversione dei ruoli: {e}", ephemeral=True)
 
-# Gestione degli errori per i permessi mancanti
+# Gestione degli errori corretta per evitare conflitti con interaction già risposte
 @rinomina_canali.error
 @inverti_ruoli.error
 async def command_error(interaction: discord.Interaction, error):
     if isinstance(error, app_commands.MissingPermissions):
-        await interaction.response.send_message("Non hai i permessi necessari per eseguire questo comando.", ephemeral=True)
+        msg = "Non hai i permessi necessari per eseguire questo comando."
     else:
-        await interaction.response.send_message("Si è verificato un errore durante l'esecuzione del comando.", ephemeral=True)
+        msg = "Si è verificato un errore durante l'esecuzione del comando."
+        
+    if interaction.response.is_done():
+        await interaction.followup.send(msg, ephemeral=True)
+    else:
+        await interaction.response.send_message(msg, ephemeral=True)
 
 if __name__ == "__main__":
     if not TOKEN:
