@@ -1,247 +1,177 @@
 import os
-import json
 import threading
 import discord
-from flask import Flask, render_template_string, request, jsonify, session, redirect, url_for
 from discord.ext import commands
-from zenora import APIClient
+from discord import app_commands
+from dotenv import load_dotenv
+from flask import Flask
 
-# --- CONFIGURAZIONE ---
-TOKEN = os.getenv("BOT_TOKEN")
-CLIENT_ID = os.getenv("CLIENT_ID")
-CLIENT_SECRET = os.getenv("CLIENT_SECRET")
-REDIRECT_URI = os.getenv("CALLBACK_URL") 
-GUILD_ID = int(os.getenv("GUILD_ID") or 0)
-ADMIN_IDS = ["IL_TUO_ID_DISCORD"] # Inserisci qui il tuo ID
+# Carica le variabili d'ambiente dal file .env
+load_dotenv()
+TOKEN = os.getenv("DISCORD_TOKEN")
 
+# --- CONFIGURAZIONE FLASK (Server Web) ---
 app = Flask(__name__)
-app.secret_key = "platinum_return_secret_key_99"
 
-# Bot Discord
+@app.route("/")
+def home():
+    return "Il bot Discord è attivo e online! 🚀"
+
+def run_flask():
+    app.run(host="0.0.0.0", port=8080)
+
+flask_thread = threading.Thread(target=run_flask)
+flask_thread.daemon = True
+flask_thread.start()
+
+# --- CONFIGURAZIONE DISCORD BOT ---
 intents = discord.Intents.default()
+intents.guilds = True
+intents.messages = True
 intents.message_content = True
+
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# Client per Login Discord (OAuth2)
-api_client = APIClient(TOKEN, client_secret=CLIENT_SECRET)
-
-# --- DATABASE LOCALE (JSON) ---
-DB_FILE = 'staff_db.json'
-if not os.path.exists(DB_FILE):
-    with open(DB_FILE, 'w') as f: json.dump([], f)
-
-def get_staff():
-    with open(DB_FILE, 'r') as f: return json.load(f)
-
-def save_staff(data):
-    with open(DB_FILE, 'w') as f: json.dump(data, f)
-
-# --- LOGICA DASHBOARD & AUTH ---
-
-@app.route('/login')
-def login():
-    url = f"https://discord.com/api/oauth2/authorize?client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}&response_type=code&scope=identify"
-    return redirect(url)
-
-@app.route('/callback')
-def callback():
-    code = request.args.get('code')
-    access_token = api_client.oauth.get_access_token(code, REDIRECT_URI).access_token
-    session['token'] = access_token
-    return redirect(url_for('dashboard'))
-
-@app.route('/dashboard')
-def dashboard():
-    if 'token' not in session: return redirect(url_for('login'))
-    bearer_client = APIClient(session['token'], bearer=True)
-    user = bearer_client.users.get_current_user()
+# Funzione universale per normalizzare qualsiasi font Unicode e trasformarlo in Serif Italic (𝐺𝑒𝑛𝑒𝑟𝑎𝑙𝑒)
+def universal_to_serif_italic(text: str) -> str:
+    normal_lower = "abcdefghijklmnopqrstuvwxyz"
+    normal_upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     
-    if str(user.id) not in ADMIN_IDS:
-        return "⚠️ Accesso Negato: Non sei autorizzato.", 403
+    serif_italic_lower = "𝑎𝑏𝑐𝑑𝑒𝑓𝑔ℎ𝑖𝑗𝑘𝑙𝑚𝑛𝑜𝑝𝑞𝑟𝑠𝑡𝑢𝑣𝑤𝑥𝑦𝑧"
+    serif_italic_upper = "𝐴𝐵𝐶𝐷𝐸𝐹𝐺𝐻𝐼𝐽𝐾𝐿𝑀𝑁𝑂𝑃𝑄𝑅𝑆𝑇𝑈𝑉𝑊𝑋𝑌𝑍"
+
+    result = []
+    for char in text:
+        code = ord(char)
+        if ord('a') <= code <= ord('z'):
+            idx = code - ord('a')
+            result.append(serif_italic_lower[idx])
+        elif ord('A') <= code <= ord('Z'):
+            idx = code - ord('A')
+            result.append(serif_italic_upper[idx])
+        else:
+            if 0x1D5D4 <= code <= 0x1D5ED: # Sans-Serif Bold A-Z
+                result.append(serif_italic_upper[code - 0x1D5D4])
+            elif 0x1D5EE <= code <= 0x1D607: # Sans-Serif Bold a-z
+                result.append(serif_italic_lower[code - 0x1D5EE])
+            elif 0x1D5A0 <= code <= 0x1D5B9: # Sans-Serif Regular A-Z
+                result.append(serif_italic_upper[code - 0x1D5A0])
+            elif 0x1D5BA <= code <= 0x1D5D3: # Sans-Serif Regular a-z
+                result.append(serif_italic_lower[code - 0x1D5BA])
+            elif 0x1D400 <= code <= 0x1D419: # Serif Bold A-Z
+                result.append(serif_italic_upper[code - 0x1D400])
+            elif 0x1D41A <= code <= 0x1D433: # Serif Bold a-z
+                result.append(serif_italic_lower[code - 0x1D41A])
+            elif char == ' ' or char == '-':
+                result.append('_')
+            else:
+                result.append(char)
+                
+    return "".join(result)
+
+# Funzione per estrarre l'emoji e il nome dal vecchio canale
+def extract_emoji_and_name(old_name: str):
+    cleaned = old_name.strip()
+    if cleaned:
+        first_char = cleaned[0]
+        if not first_char.isalnum():
+            for sep in ["｜", "|", " - ", "_", " ", "ヾ"]:
+                if sep in cleaned:
+                    parts = cleaned.split(sep, 1)
+                    potential_emoji = parts[0].strip()
+                    rest_of_name = parts[1].strip()
+                    if potential_emoji:
+                        return potential_emoji, rest_of_name
+            return first_char, cleaned[1:].strip()
+    return "💬", cleaned
+
+@bot.event
+async def on_ready():
+    print(f"Bot online come {bot.user}")
+    try:
+        synced = await bot.tree.sync()
+        print(f"Sincronizzati {len(synced)} slash commands.")
+    except Exception as e:
+        print(e)
+
+# --- COMANDO 1: RINOMINA CANALI ---
+@bot.tree.command(name="rinomina_canali", description="Converte qualsiasi font esistente nel font 𝐺𝑒𝑛𝑒𝑟𝑎𝑙𝑒 mantenendo l'emoji.")
+@app_commands.checks.has_permissions(manage_channels=True)
+async def rinomina_canali(interaction: discord.Interaction):
+    await interaction.response.defer(thinking=True)
     
-    return render_template_string(BASE_HTML, page="dashboard", staff=get_staff(), user=user)
+    guild = interaction.guild
+    count = 0
 
-# --- API ADMIN ---
+    for channel in guild.channels:
+        if isinstance(channel, discord.CategoryCategoryChannel) or isinstance(channel, discord.CategoryChannel):
+            continue
 
-@app.route('/api/admin/add', methods=['POST'])
-def add_member():
-    if 'token' not in session: return jsonify({"error": "Unauthorized"}), 401
-    data = request.json
-    staff = get_staff()
-    staff.append(data)
-    save_staff(staff)
-    return jsonify({"status": "success"})
+        extracted_emoji, base_name = extract_emoji_and_name(channel.name)
+        base_name = base_name.replace("ヾ", "").strip()
+        formatted_name = universal_to_serif_italic(base_name)
+        new_name = f"{extracted_emoji}ヾ{formatted_name}"
 
-@app.route('/api/admin/delete/<int:idx>', methods=['DELETE'])
-def delete_member(idx):
-    staff = get_staff()
-    if 0 <= idx < len(staff):
-        staff.pop(idx)
-        save_staff(staff)
-    return jsonify({"status": "success"})
+        try:
+            await channel.edit(name=new_name)
+            count += 1
+        except Exception as e:
+            print(f"Errore nel rinominare {channel.name}: {e}")
 
-# --- ROTTE PUBBLICHE ---
+    await interaction.followup.send(f"Fatto! Ho convertito {count} canali nel font 𝐺𝑒𝑛𝑒𝑟𝑎𝑙𝑒.")
 
-@app.route('/')
-def index():
-    return render_template_string(BASE_HTML, page="home")
+# --- COMANDO 2: INVERTI RUOLI ---
+@bot.tree.command(name="inverti_ruoli", description="Inverte l'ordine dei ruoli del server spostando quelli in basso in alto.")
+@app_commands.checks.has_permissions(manage_roles=True)
+async def inverti_ruoli(interaction: discord.Interaction):
+    await interaction.response.defer(thinking=True)
+    
+    guild = interaction.guild
+    
+    # Prende tutti i ruoli escludendo @everyone (che deve restare in fondo per forza)
+    # e il ruolo gestito dal bot stesso (per evitare errori di gerarchia)
+    bot_member = guild.me
+    managed_roles = [r for r in guild.roles if not r.is_default() and r < bot_member.top_role]
+    
+    if not managed_roles:
+        await interaction.followup.send("Non ci sono ruoli gestibili o inferiori al ruolo del bot da invertire.", ephemeral=True)
+        return
 
-@app.route('/staff')
-def staff_page():
-    return render_template_string(BASE_HTML, page="staff", staff=get_staff())
-
-@app.route('/shop')
-def shop_page():
-    packages = [
-        {"name": "VIP PLATINUM", "price": "15€", "desc": "Priorità e Auto Esclusiva"},
-        {"name": "GANG STARTER", "price": "25€", "desc": "Base + Armi per la tua crew"},
-        {"name": "UNBAN", "price": "50€", "desc": "Seconda chance (previa revisione)"}
-    ]
-    return render_template_string(BASE_HTML, page="shop", packages=packages)
-
-@app.route('/api/ticket', methods=['POST'])
-def ticket():
-    data = request.json
-    guild = bot.get_guild(GUILD_ID)
-    channel = discord.utils.get(guild.text_channels, name="ticket-staff")
-    if channel:
-        embed = discord.Embed(title="🎫 NUOVO TICKET DAL SITO", color=0xffffff)
-        embed.add_field(name="Utente", value=data['name'])
-        embed.add_field(name="Oggetto", value=data['subject'])
-        embed.add_field(name="Messaggio", value=data['message'], inline=False)
-        bot.loop.create_task(channel.send(embed=embed))
-        return jsonify({"status": "success"})
-    return jsonify({"status": "error"}), 500
-
-# --- TEMPLATE HTML (Unificato) ---
-BASE_HTML = """
-<!DOCTYPE html>
-<html lang="it">
-<head>
-    <meta charset="UTF-8">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { background-color: #050505; color: white; font-family: 'Inter', sans-serif; }
-        .platinum-text { background: linear-gradient(to right, #fff, #666); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    </style>
-</head>
-<body>
-    <nav class="p-6 border-b border-white/5 flex justify-between items-center max-w-7xl mx-auto">
-        <div class="font-black italic text-2xl tracking-tighter">PLATINUM <span class="text-gray-600 font-normal">RETURN</span></div>
-        <div class="space-x-6 uppercase text-[10px] font-bold tracking-widest">
-            <a href="/" class="hover:text-gray-400">Home</a>
-            <a href="/staff" class="hover:text-gray-400">Staff</a>
-            <a href="/shop" class="text-yellow-500 hover:text-yellow-400">Shop</a>
-            <a href="/dashboard" class="bg-white text-black px-3 py-1 rounded">Admin</a>
-        </div>
-    </nav>
-
-    {% if page == "home" %}
-    <div class="text-center py-20 px-4">
-        <h1 class="text-7xl font-black italic platinum-text mb-6">RETURN TO STREETS</h1>
-        <p class="text-gray-500 max-w-lg mx-auto mb-10">Il server RP definitivo. Qualità, serietà e puro divertimento.</p>
+    # Inverte la lista dei ruoli
+    reversed_roles = list(reversed(managed_roles))
+    
+    # Costruisce il dizionario delle posizioni in base all'ordine attuale dei ruoli validi
+    role_positions = {role: role.position for role in managed_roles}
+    
+    # Ordinamento inverso da applicare tramite l'API di Discord
+    # Nota: Discord richiede un dizionario {role: position} o una lista posizionale per la modifica di massa
+    try:
+        # Prepariamo la lista invertita mantenendo gli ID originali
+        # Su discord.py possiamo usare guild.edit_role_positions
+        positions_dict = {}
         
-        <div class="max-w-md mx-auto bg-[#111] p-8 rounded-3xl border border-white/5">
-            <h3 class="text-xl font-bold mb-6 italic uppercase">Supporto Web</h3>
-            <input id="t-name" type="text" placeholder="Tuo Nome" class="w-full bg-black border border-white/10 p-3 rounded-lg mb-3">
-            <input id="t-sub" type="text" placeholder="Oggetto" class="w-full bg-black border border-white/10 p-3 rounded-lg mb-3">
-            <textarea id="t-msg" placeholder="Descrizione..." class="w-full bg-black border border-white/10 p-3 rounded-lg mb-3 h-24"></textarea>
-            <button onclick="sendTicket()" class="w-full bg-white text-black font-black py-3 rounded-lg hover:bg-gray-200">INVIA TICKET</button>
-        </div>
-    </div>
+        # Assegniamo le posizioni invertite riciclando i valori numerici esistenti
+        original_positions = sorted([role.position for role in managed_roles])
+        
+        for i, role in enumerate(reversed_roles):
+            positions_dict[role] = original_positions[i]
+            
+        await guild.edit_role_positions(positions_dict)
+        await interaction.followup.send(f"Fatto! L'ordine dei {len(managed_roles)} ruoli è stato invertito con successo.")
+    except Exception as e:
+        await interaction.followup.send(f"Errore durante l'inversione dei ruoli: {e}", ephemeral=True)
 
-    {% elif page == "staff" %}
-    <div class="max-w-6xl mx-auto py-20 px-4">
-        <h2 class="text-4xl font-black italic mb-12 uppercase">Il Nostro Team</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {% for m in staff %}
-            <div class="bg-[#111] p-6 rounded-2xl border-l-4" style="border-color: {{m.color}}">
-                <img src="{{m.img}}" class="w-20 h-20 rounded-full mb-4 border border-white/10 shadow-xl">
-                <h3 class="text-xl font-bold uppercase">{{m.name}}</h3>
-                <p class="text-xs font-black opacity-50 uppercase tracking-widest" style="color: {{m.color}}">{{m.role}}</p>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-
-    {% elif page == "shop" %}
-    <div class="max-w-6xl mx-auto py-20 px-4">
-        <h2 class="text-4xl font-black italic mb-12 uppercase">Platinum Store</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {% for p in packages %}
-            <div class="bg-[#111] p-10 rounded-3xl border border-white/5 flex flex-col justify-between hover:border-white/20 transition">
-                <div>
-                    <h3 class="text-2xl font-bold mb-2">{{p.name}}</h3>
-                    <p class="text-gray-500 mb-6">{{p.desc}}</p>
-                </div>
-                <div>
-                    <p class="text-4xl font-black mb-6">{{p.price}}</p>
-                    <button class="w-full bg-white text-black font-bold py-3 rounded-xl">ACQUISTA</button>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-
-    {% elif page == "dashboard" %}
-    <div class="max-w-4xl mx-auto py-20 px-4">
-        <div class="flex justify-between items-center mb-10 bg-[#111] p-6 rounded-2xl">
-            <h2 class="text-2xl font-bold">DASHBOARD ADMIN</h2>
-            <p class="text-sm opacity-50">Admin: {{user.username}}</p>
-        </div>
-
-        <div class="bg-[#111] p-8 rounded-3xl mb-10">
-            <h3 class="font-bold mb-4 uppercase text-gray-400">Aggiungi Staff</h3>
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <input id="n" type="text" placeholder="Nome" class="bg-black p-3 rounded-lg border border-white/5">
-                <input id="r" type="text" placeholder="Ruolo" class="bg-black p-3 rounded-lg border border-white/5">
-                <input id="c" type="color" class="w-full h-12 bg-black rounded-lg">
-                <input id="i" type="text" placeholder="URL Immagine" class="bg-black p-3 rounded-lg border border-white/5">
-            </div>
-            <button onclick="add()" class="w-full bg-blue-600 py-3 rounded-xl font-bold">SALVA</button>
-        </div>
-
-        <div class="space-y-4">
-            {% for m in staff %}
-            <div class="bg-[#0a0a0a] p-4 rounded-xl flex justify-between items-center border border-white/5">
-                <div class="flex items-center gap-4">
-                    <img src="{{m.img}}" class="w-10 h-10 rounded-full">
-                    <div><p class="font-bold">{{m.name}}</p><p class="text-xs opacity-40">{{m.role}}</p></div>
-                </div>
-                <button onclick="del({{loop.index0}})" class="text-red-500 font-bold">X</button>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-    {% endif %}
-
-    <script>
-    async function sendTicket() {
-        const data = { name: document.getElementById('t-name').value, subject: document.getElementById('t-sub').value, message: document.getElementById('t-msg').value };
-        const res = await fetch('/api/ticket', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.dumps(data) });
-        if(res.ok) alert("Ticket inviato!");
-    }
-    async function add() {
-        const data = { name: document.getElementById('n').value, role: document.getElementById('r').value, color: document.getElementById('c').value, img: document.getElementById('i').value };
-        await fetch('/api/admin/add', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
-        location.reload();
-    }
-    async function del(i) {
-        if(confirm("Eliminare?")) {
-            await fetch('/api/admin/delete/'+i, { method:'DELETE' });
-            location.reload();
-        }
-    }
-    </script>
-</body>
-</html>
-"""
-
-# --- AVVIO SERVER ---
-def run_flask():
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+# Gestione degli errori per i permessi mancanti
+@rinomina_canali.error
+@inverti_ruoli.error
+async def command_error(interaction: discord.Interaction, error):
+    if isinstance(error, app_commands.MissingPermissions):
+        await interaction.response.send_message("Non hai i permessi necessari per eseguire questo comando.", ephemeral=True)
+    else:
+        await interaction.response.send_message("Si è verificato un errore durante l'esecuzione del comando.", ephemeral=True)
 
 if __name__ == "__main__":
-    threading.Thread(target=run_flask).start()
-    bot.run(TOKEN)
+    if not TOKEN:
+        print("Errore: Token di Discord non trovato nel file .env!")
+    else:
+        bot.run(TOKEN)
