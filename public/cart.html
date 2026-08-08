@@ -3,26 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nova Shop - Carrello & Ordini</title>
+    <title>Nova Shop - I Miei Ordini</title>
+    <link rel="stylesheet" href="/style.css">
     <style>
-        body, html { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background-color: #030000; color: white; overflow-x: hidden; }
-        .lightning-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: radial-gradient(circle, rgba(180,0,0,0.2) 0%, rgba(3,0,0,1) 90%); z-index: -1; animation: flash 4s infinite; }
-        @keyframes flash { 0%, 90%, 96%, 100% { opacity: 0.7; } 92%, 94% { opacity: 1; background: radial-gradient(circle, rgba(255,40,0,0.5) 0%, rgba(30,0,0,1) 90%); } }
-        nav { display: flex; justify-content: space-between; align-items: center; padding: 15px 40px; background: rgba(10,0,0,0.95); border-bottom: 2px solid #ff2a00; }
-        .logo-container { display: flex; align-items: center; gap: 15px; }
-        .logo { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #ff2a00; object-fit: cover; }
-        .nav-links { display: flex; gap: 20px; align-items: center; }
-        .nav-links a { color: white; text-decoration: none; font-weight: bold; }
-        .btn-discord { background: #5865F2; padding: 8px 16px; border-radius: 6px; display: flex; align-items: center; gap: 8px; }
-        .btn-logout { background: #ff2a00; padding: 6px 12px; border-radius: 5px; font-size: 0.9rem; }
-        .user-profile { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); padding: 5px 15px; border-radius: 20px; border: 1px solid #441111; }
-        .user-profile img { width: 32px; height: 32px; border-radius: 50%; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
-        h1 { text-align: center; color: #ff3300; text-shadow: 0 0 10px rgba(255,50,0,0.5); }
-        .orders-section { margin-top: 20px; background: rgba(10,0,0,0.9); padding: 25px; border-radius: 10px; border: 1px solid #550000; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #331111; }
-        th { color: #ff5533; }
+        .order-card { background: rgba(18, 0, 0, 0.85); border: 1px solid #441111; padding: 15px; border-radius: 8px; margin-bottom: 12px; }
+        .order-card h3 { margin: 0 0 5px; color: #ff5533; font-size: 1.1rem; }
+        .order-card p { margin: 4px 0; font-size: 0.9rem; color: #ccc; }
     </style>
 </head>
 <body>
@@ -30,32 +16,28 @@
     <nav>
         <div class="logo-container">
             <img src="/logo.jpg" alt="Logo" class="logo">
-            <h2 style="margin:0; color: #ff3300;">Nova Shop</h2>
+            <h2>Nova Shop</h2>
         </div>
         <div class="nav-links" id="navLinks">
             <a href="/">Home</a>
             <a href="/products.html">Prodotti</a>
-            <a href="/cart.html">Carrello & Ordini</a>
-            <span id="authArea"><a href="/auth/discord" class="btn-discord">Accedi con Discord</a></span>
+            <a href="/cart.html">Carrello</a>
+            <span id="authArea"><a href="/auth/discord" class="btn-discord">Accedi</a></span>
         </div>
     </nav>
     <div class="container">
-        <h1>🛒 Carrello & Storico Ordini 🛒</h1>
-        <div id="contentArea">
-            <p style="text-align:center; margin-top:40px;">Caricamento...</p>
+        <h1>🛒 I Tuoi Ordini 🛒</h1>
+        <div id="ordersContainer">
+            <p style="text-align:center;">Caricamento ordini...</p>
         </div>
     </div>
     <script>
         fetch('/api/me').then(res => res.json()).then(({ user, isAdmin }) => {
-            const authArea = document.getElementById('authArea');
-            const contentArea = document.getElementById('contentArea');
-
             if (!user) {
-                contentArea.innerHTML = '<p style="text-align:center; color:#ff4400; font-size:1.2rem;">Devi effettuare l\'accesso con Discord per visualizzare il carrello e i tuoi ordini.</p>';
+                document.getElementById('ordersContainer').innerHTML = '<p style="text-align:center;">Effettua il login con Discord per vedere i tuoi ordini.</p>';
                 return;
             }
-
-            authArea.innerHTML = `
+            document.getElementById('authArea').innerHTML = `
                 <div class="user-profile">
                     <img src="https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png" alt="Avatar">
                     <span>${user.username}</span>
@@ -66,41 +48,23 @@
                 const links = document.getElementById('navLinks');
                 const adminLink = document.createElement('a');
                 adminLink.href = '/admin.html';
-                adminLink.textContent = 'Pannello Admin';
-                links.insertBefore(adminLink, authArea);
+                adminLink.textContent = 'Admin';
+                links.insertBefore(adminLink, document.getElementById('authArea'));
             }
 
-            contentArea.innerHTML = `
-                <div class="orders-section">
-                    <h2>I tuoi Ordini</h2>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Prodotto</th>
-                                <th>Prezzo</th>
-                                <th>Stato</th>
-                            </tr>
-                        </thead>
-                        <tbody id="ordersList"><tr><td colspan="4" style="text-align:center;">Caricamento ordini...</td></tr></tbody>
-                    </table>
-                </div>
-            `;
-
-            fetch('/api/orders').then(r => r.json()).then(orders => {
-                const list = document.getElementById('ordersList');
+            fetch('/api/orders').then(res => res.json()).then(orders => {
+                const container = document.getElementById('ordersContainer');
                 if(orders.length === 0) {
-                    list.innerHTML = '<tr><td colspan="4" style="text-align:center;">Non hai ancora effettuato ordini.</td></tr>';
-                    return;
+                    container.innerHTML = '<p style="text-align:center;">Non hai ancora effettuato ordini.</p>';
+                } else {
+                    container.innerHTML = orders.map(o => `
+                        <div class="order-card">
+                            <h3>Ordine #${o.id} - ${o.product_name}</h3>
+                            <p><strong>Prezzo:</strong> €${o.price}</p>
+                            <p><strong>Stato:</strong> <span style="color:#ff9900;">${o.status}</span></p>
+                        </div>
+                    `).join('');
                 }
-                list.innerHTML = orders.map(o => `
-                    <tr>
-                        <td>#${o.id}</td>
-                        <td>${o.product_name}</td>
-                        <td>€${o.price}</td>
-                        <td style="color: #ffaa00;">${o.status}</td>
-                    </tr>
-                `).join('');
             });
         });
     </script>
