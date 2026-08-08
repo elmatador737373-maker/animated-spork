@@ -6,11 +6,184 @@
     <title>Nova Shop - Home</title>
     <link rel="stylesheet" href="/style.css">
     <style>
-        .hero { text-align: center; padding: 40px 15px; position: relative; z-index: 2; }
-        .hero h1 { font-size: 2.2rem; color: #ff3300; text-shadow: 0 0 15px rgba(255,42,0,0.7); margin-bottom: 10px; }
-        .hero p { color: #ccc; font-size: 1rem; margin-bottom: 25px; }
-        .btn-cta { background: #ff2a00; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 1.1rem; box-shadow: 0 0 15px rgba(255,42,0,0.5); display: inline-block; transition: 0.2s; }
-        .btn-cta:hover { background: #cc2200; }
+        :root {
+            --primary: #ff2a00;
+            --primary-glow: rgba(255, 42, 0, 0.4);
+            --bg-glass: rgba(15, 2, 2, 0.75);
+            --border-glass: rgba(255, 42, 0, 0.25);
+        }
+
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #050000;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        /* Navigazione Modern & Clean */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            background: var(--bg-glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-glass);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 1px solid var(--primary);
+        }
+
+        .logo-container h2 {
+            font-size: 1.1rem;
+            margin: 0;
+            letter-spacing: 0.5px;
+            color: #fff;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .nav-links a {
+            color: #bbb;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: var(--primary);
+        }
+
+        /* Hero Section Ottimizzata Mobile */
+        .hero-wrapper {
+            min-height: calc(85vh - 70px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-card {
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 20px;
+            padding: 35px 20px;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 25px var(--primary-glow);
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: rgba(255, 42, 0, 0.12);
+            color: var(--primary);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255, 42, 0, 0.3);
+        }
+
+        .hero-card h1 {
+            font-size: 1.85rem;
+            line-height: 1.2;
+            margin: 0 0 12px 0;
+            color: #fff;
+            text-shadow: 0 0 15px rgba(255, 42, 0, 0.5);
+        }
+
+        .hero-card p {
+            color: #aaa;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin: 0 u 25px 0;
+        }
+
+        .btn-cta {
+            background: linear-gradient(135deg, #ff2a00, #cc1100);
+            color: white;
+            padding: 14px 28px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1rem;
+            box-shadow: 0 5px 20px var(--primary-glow);
+            display: inline-block;
+            width: 100%;
+            box-sizing: border-box;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-cta:active {
+            transform: scale(0.98);
+        }
+
+        /* Profilo Utente Navbar */
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .user-profile img {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+        }
+
+        .user-profile span {
+            font-size: 0.8rem;
+            color: #ddd;
+            max-width: 80px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .btn-logout {
+            color: #ff5555 !important;
+            font-size: 0.8rem !important;
+        }
+
+        /* Adattamento perschermi molto piccoli / mobile */
+        @media (max-width: 480px) {
+            nav { padding: 10px 15px; }
+            .nav-links { gap: 10px; }
+            .hero-card { padding: 25px 15px; }
+            .hero-card h1 { font-size: 1.6rem; }
+        }
     </style>
 </head>
 <body>
@@ -23,17 +196,20 @@
             <h2>Nova Shop</h2>
         </div>
         <div class="nav-links" id="navLinks">
-            <a href="/">Home</a>
+            <a href="/" class="active">Home</a>
             <a href="/products.html">Prodotti</a>
             <a href="/cart.html">Carrello</a>
             <span id="authArea"><a href="/auth/discord" class="btn-discord">Accedi</a></span>
         </div>
     </nav>
 
-    <div class="container hero">
-        <h1>Benvenuto su Nova Shop ⚡</h1>
-        <p>Il negozio digitale definitivo per servizi e prodotti esclusivi. Sicuro, veloce e automatizzato.</p>
-        <a href="/products.html" class="btn-cta">Esplora i Prodotti</a>
+    <div class="hero-wrapper">
+        <div class="hero-card">
+            <div class="hero-badge">⚡ Servizi Digitali Premium</div>
+            <h1>Il futuro dello shopping digitale</h1>
+            <p>Prodotti esclusivi, consegne istantanee e massima sicurezza in un'unica piattaforma automatizzata.</p>
+            <a href="/products.html" class="btn-cta">Esplora i Prodotti</a>
+        </div>
     </div>
 
     <script>
