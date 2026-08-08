@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: linux-terminal
+    env: docker
+    plan: free
+    region: frankfurt
