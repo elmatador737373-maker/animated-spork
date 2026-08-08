@@ -158,10 +158,9 @@ client.on('interactionCreate', async (interaction) => {
 });
 
 
-// --- ROTTE OAUTH2 DISCORD ---
 app.get('/auth/discord', (req, res) => {
-    const discordLoginUrl = `https://discord.com/api/oauth2/authorize?client_id=${process.env.DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.DISCORD_REDIRECT_URI)}&response_type=code&scope=identify`;
-    res.redirect(discordLoginUrl);
+    const discordOAuthUrl = `https://discord.com/oauth2/authorize?client_id=1475507053249433620&response_type=code&redirect_uri=https%3A%2F%2Fnova-shop-pehc.onrender.com%2Fauth%2Fdiscord%2Fcallback&scope=identify+guilds`;
+    res.redirect(discordOAuthUrl);
 });
 
 app.get('/auth/discord/callback', async (req, res) => {
