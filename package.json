@@ -1,21 +1,18 @@
 {
   "name": "nova-shop",
   "version": "1.0.0",
-  "description": "Discord Asset Shop con Web Dashboard e Bot Integrato",
+  "description": "Nova Shop Bot & Web",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
-    "axios": "^1.6.8",
     "cors": "^2.8.5",
-    "discord.js": "^14.14.1",
+    "discord.js": "^14.14.0",
     "dotenv": "^16.4.5",
-    "express": "^4.19.2"
-  },
-  "devDependencies": {
-    "nodemon": "^3.1.0"
+    "express": "^4.19.2",
+    "express-session": "^1.18.0",
+    "node-fetch": "^3.3.2"
   }
 }
