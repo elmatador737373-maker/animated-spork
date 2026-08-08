@@ -6,8 +6,8 @@ const DiscordStrategy = require('passport-discord').Strategy;
 const { createClient } = require('@supabase/supabase-js');
 const { Client, GatewayIntentBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
 const path = require('path');
-const multer = require('multer'); // <--- Importante per i file FormData
-const axios = require('axios');   // <--- Importante per le richieste a Imgur
+const multer = require('multer');
+const axios = require('axios');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -46,20 +46,23 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Funzione di servizio per caricare l'immagine su Imgur
-async function uploadToImgur(fileBuffer) {
-    if (!process.env.IMGUR_CLIENT_ID) {
-        throw new Error('IMGUR_CLIENT_ID non configurato nel file .env');
+// Funzione di servizio per caricare l'immagine su ImgBB
+async function uploadToImgBB(fileBuffer) {
+    if (!process.env.IMGBB_API_KEY) {
+        throw new Error('IMGBB_API_KEY non configurato nel file .env');
     }
-    const formDataImgur = new URLSearchParams();
-    formDataImgur.append('image', fileBuffer.toString('base64'));
+    
+    const FormData = require('form-data');
+    const form = new FormData();
+    form.append('image', fileBuffer.toString('base64'));
 
-    const response = await axios.post('https://api.imgur.com/3/image', formDataImgur, {
+    const response = await axios.post(`https://api.imgbb.com/1/upload?key=${process.env.IMGBB_API_KEY}`, form, {
         headers: {
-            'Authorization': `Client-ID ${process.env.IMGUR_CLIENT_ID}`
+            ...form.getHeaders()
         }
     });
-    return response.data.data.link;
+    
+    return response.data.data.url; // Restituisce l'URL diretto dell'immagine
 }
 
 // Endpoint invisibile per UptimeRobot (Ping Server)
@@ -149,7 +152,7 @@ app.post('/api/checkout', async (req, res) => {
     res.json({ success: true, message: 'Ordine creato!' });
 });
 
-// Admin: Aggiungi Prodotto (con supporto Upload File -> Imgur)
+// Admin: Aggiungi Prodotto (con supporto Upload File -> ImgBB)
 app.post('/api/admin/product', upload.single('imageFile'), async (req, res) => {
     if (!req.isAuthenticated() || !ADMIN_IDS.includes(req.user.id)) {
         return res.status(403).json({ error: 'Accesso negato.' });
@@ -159,9 +162,8 @@ app.post('/api/admin/product', upload.single('imageFile'), async (req, res) => {
     const parsedStock = parseInt(stock);
 
     try {
-        // Se è stato caricato un file tramite FormData, caricalo su Imgur
         if (req.file) {
-            image = await uploadToImgur(req.file.buffer);
+            image = await uploadToImgBB(req.file.buffer);
         }
 
         const { data, error } = await supabase.from('products').insert([
@@ -195,12 +197,12 @@ app.post('/api/admin/product', upload.single('imageFile'), async (req, res) => {
 
         res.json({ success: true, product: data[0] });
     } catch (err) {
-        console.error("Errore Imgur/Creazione:", err);
-        res.status(500).json({ error: 'Errore durante il caricamento dell\'immagine su Imgur' });
+        console.error("Errore ImgBB/Creazione:", err);
+        res.status(500).json({ error: 'Errore durante il caricamento dell\'immagine su ImgBB' });
     }
 });
 
-// Admin: Modifica Prodotto / Aggiorna Stock (con supporto Upload File -> Imgur)
+// Admin: Modifica Prodotto / Aggiorna Stock (con supporto Upload File -> ImgBB)
 app.put('/api/admin/product/:id', upload.single('imageFile'), async (req, res) => {
     if (!req.isAuthenticated() || !ADMIN_IDS.includes(req.user.id)) {
         return res.status(403).json({ error: 'Accesso negato.' });
@@ -211,14 +213,12 @@ app.put('/api/admin/product/:id', upload.single('imageFile'), async (req, res) =
     const newStock = parseInt(stock);
 
     try {
-        // Recuperiamo il prodotto dal database per avere il contesto precedente
         const { data: oldProd } = await supabase.from('products').select('stock, name, variant, image').eq('id', productId).single();
 
-        // Se l'utente ha caricato un nuovo file, caricalo su Imgur sovrascrivendo l'immagine
         if (req.file) {
-            image = await uploadToImgur(req.file.buffer);
+            image = await uploadToImgBB(req.file.buffer);
         } else if (!image && oldProd) {
-            image = oldProd.image; // Mantiene la vecchia immagine se non viene passata
+            image = oldProd.image;
         }
 
         const { data, error } = await supabase.from('products').update({
@@ -252,8 +252,8 @@ app.put('/api/admin/product/:id', upload.single('imageFile'), async (req, res) =
 
         res.json({ success: true, product: data[0] });
     } catch (err) {
-        console.error("Errore Imgur/Modifica:", err);
-        res.status(500).json({ error: 'Errore durante il caricamento della nuova immagine su Imgur' });
+        console.error("Errore ImgBB/Modifica:", err);
+        res.status(500).json({ error: 'Errore durante il caricamento della nuova immagine su ImgBB' });
     }
 });
 
