@@ -19,6 +19,11 @@ app.use(express.json());
 app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// --- HEALTH CHECK PER UPTIMEROBOT ---
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'online', timestamp: new Date() });
+});
+
 // Configurazione Sessioni per OAuth2
 app.use(session({
     secret: process.env.SESSION_SECRET || 'super_secret_key_nova_shop',
