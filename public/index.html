@@ -2,87 +2,187 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>NOVA SHOP - Store Ufficiale</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nova Shop - Store Ufficiale</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { background: #0a0a0c; color: #fff; font-family: sans-serif; margin: 0; min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; }
-        .nav-container { display: flex; justify-content: space-between; align-items: center; padding: 15px 30px; background: #0a0a0c; border-bottom: 2px solid #ff003c; }
-        .content { padding: 30px; flex: 1; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; margin-top: 30px; }
-        .card { background: #121216; border: 1px solid #222; border-radius: 8px; overflow: hidden; padding: 15px; }
-        .card img { width: 100%; height: 160px; object-fit: cover; border-radius: 6px; }
-        .btn { display: inline-block; background: #ff003c; color: #fff; padding: 8px 15px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-top: 10px; }
-        .discord-float { position: fixed; bottom: 20px; right: 20px; background: #ff003c; color: #fff; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(255, 0, 60, 0.5); z-index: 1000; text-decoration: none; transition: transform 0.2s; }
-        .discord-float:hover { transform: scale(1.1); }
-        .discord-float svg { width: 28px; height: 28px; fill: #fff; }
+        /* Sfondo personalizzato con bagliori e fulmini rossi ispirati al logo */
+        body {
+            background-color: #020204;
+            background-image: 
+                radial-gradient(circle at 15% 10%, rgba(220, 38, 38, 0.22) 0%, transparent 45%),
+                radial-gradient(circle at 85% 85%, rgba(185, 28, 28, 0.15) 0%, transparent 45%),
+                linear-gradient(to right, rgba(220, 38, 38, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(220, 38, 38, 0.03) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+            background-attachment: fixed;
+        }
+
+        /* Effetto bagliore laser rosso */
+        .neon-glow {
+            text-shadow: 0 0 25px rgba(239, 68, 68, 0.6), 0 0 50px rgba(220, 38, 38, 0.3);
+        }
+
+        /* Effetto hover card in stile store moderno */
+        .card-glow {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-glow:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px -10px rgba(239, 68, 68, 0.25);
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+
+        /* Linea laser decorativa superiore */
+        .laser-line {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(239, 68, 68, 0.8), transparent);
+            z-index: 100;
+        }
     </style>
 </head>
-<body>
-    <header>
-        <div class="nav-container">
-            <a href="index.html" style="display: flex; align-items: center; gap: 12px; text-decoration: none;">
-                <img src="logo.jpg" alt="NOVA SHOP Logo" style="height: 45px; width: auto; border-radius: 6px; box-shadow: 0 0 10px rgba(255, 0, 60, 0.4);">
-            </a>
-            <div id="auth-container">
-                <a href="/auth/discord" style="background: #5865F2; color: #fff; padding: 8px 15px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 0.9rem;">Accedi con Discord</a>
+<body class="text-slate-100 min-h-screen flex flex-col justify-between font-sans selection:bg-red-600 selection:text-white">
+
+    <div class="laser-line"></div>
+
+    <!-- NAVBAR MOBILE-FIRST -->
+    <header class="bg-slate-950/80 backdrop-blur-xl border-b border-red-950/40 sticky top-0 z-50 py-3.5 px-4 sm:px-8 flex justify-between items-center">
+        <a href="/" class="text-base sm:text-xl font-black tracking-wider text-white flex items-center gap-2.5">
+            <div class="bg-gradient-to-br from-red-600 via-rose-700 to-black p-2 rounded-xl shadow-lg shadow-red-600/30 border border-red-500/40 text-white">
+                <i class="fa-solid fa-bolt-lightning text-red-400"></i>
             </div>
+            <span>NOVA<span class="text-red-500 neon-glow">SHOP</span></span>
+        </a>
+
+        <!-- Auth Area -->
+        <div id="auth-container">
+            <a href="/auth/discord" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition shadow-lg shadow-indigo-600/20 flex items-center gap-2">
+                <i class="fa-brands fa-discord text-base"></i> <span class="hidden xs:inline">Login con Discord</span>
+            </a>
         </div>
     </header>
 
-    <div class="content">
-        <h2>Prodotti Disponibili</h2>
-        <div id="products-grid" class="grid"></div>
-    </div>
+    <!-- HERO SECTION -->
+    <section class="container mx-auto px-4 pt-12 pb-8 text-center max-w-3xl relative">
+        <div class="inline-flex items-center gap-2 mb-4 px-3.5 py-1.5 rounded-full bg-red-500/10 border border-red-500/25 text-red-400 text-xs font-bold uppercase tracking-widest shadow-inner">
+            <i class="fa-solid fa-fire text-red-500"></i> Instant Automated Delivery
+        </div>
+        <h1 class="text-3xl sm:text-5xl font-black tracking-tight mb-4 text-white leading-tight">
+            Digital Store con <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-rose-400 to-orange-500 neon-glow">Fulmini & Servizi Top</span>
+        </h1>
+        <p class="text-slate-400 text-xs sm:text-sm md:text-base max-w-xl mx-auto leading-relaxed">
+            Accedi con il tuo account Discord, scegli il prodotto desiderato e sblocca l'accesso immediato in pochi click.
+        </p>
+    </section>
 
-    <a href="https://discord.gg/7r46nnRBvY" target="_blank" class="discord-float" title="Entra nel Server Discord">
-        <svg viewBox="0 0 127.14 96.36">
-            <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.68,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1,105.25,105.25,0,0,0,32.19-16.14c2.63-27.29-4.5-51.19-18.9-72.15ZM42.45,65.69C36.18,65.69,31,60,31,53s5.18-12.72,11.45-12.72S53.9,46,53.88,53,48.71,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5.18-12.72,11.45-12.72S96.14,46,96.12,53,90.95,65.69,84.69,65.69Z"/>
-        </svg>
-    </a>
+    <!-- MAIN PRODUCT GRID -->
+    <main class="flex-grow container mx-auto px-4 py-4 max-w-6xl">
+        <div class="flex items-center justify-between mb-6 border-b border-slate-900 pb-3">
+            <h2 class="text-sm sm:text-base font-bold flex items-center gap-2 text-slate-200 uppercase tracking-wider">
+                <i class="fa-solid fa-box-archive text-red-500"></i> Catalogo Prodotti
+            </h2>
+            <span id="product-count" class="text-xs text-slate-500 font-semibold">Sincronizzazione...</span>
+        </div>
 
+        <div id="loading" class="text-center py-20 text-slate-500">
+            <i class="fa-solid fa-bolt fa-spin text-3xl mb-3 text-red-600"></i>
+            <p class="text-xs sm:text-sm">Caricamento prodotti dal server...</p>
+        </div>
+
+        <!-- Griglia Prodotti (1 colonna mobile, reattiva a griglia su desktop) -->
+        <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <!-- Dinamico via JS -->
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-950/80 border-t border-red-950/30 py-6 text-center text-xs text-slate-600">
+        <p>&copy; 2026 Nova Shop &bull; Secure Discord Integration</p>
+    </footer>
+
+    <!-- SCRIPT -->
     <script>
-        async function checkAuth() {
+        async function loadStore() {
             try {
-                const res = await fetch('/api/auth/me');
-                const data = await res.json();
+                const authRes = await fetch('/api/auth/me');
+                const authData = await authRes.json();
                 const authContainer = document.getElementById('auth-container');
-                if (data.loggedIn) {
+
+                if (authData.loggedIn) {
+                    const user = authData.user;
                     authContainer.innerHTML = `
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <img src="${data.user.avatar}" alt="Avatar" style="width: 32px; height: 32px; border-radius: 50%;">
-                            <span style="font-weight: bold; font-size: 0.9rem;">${data.user.global_name}</span>
-                            <a href="orders.html" style="color: #fff; text-decoration: none; margin-left: 10px; font-weight: bold; font-size: 0.9rem;">I Miei Ordini</a>
-                            <a href="admin.html" style="background: #ff003c; color: #fff; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 0.85rem; margin-left: 5px;">Admin</a>
-                            <a href="/auth/logout" style="background: #333; color: #ff003c; padding: 6px 10px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 0.85rem; margin-left: 5px;">Esci</a>
+                        <div class="flex items-center gap-2.5 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl shadow-lg">
+                            <img src="${user.avatar}" alt="Avatar" class="w-7 h-7 rounded-full border border-red-500/50">
+                            <span class="text-xs sm:text-sm font-bold text-slate-200 max-w-[100px] sm:max-w-[140px] truncate">${user.global_name}</span>
+                            <a href="/auth/logout" class="text-slate-400 hover:text-red-400 text-xs ml-1 transition" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></a>
                         </div>
                     `;
                 }
-            } catch (err) { console.error(err); }
-        }
+            } catch (err) {
+                console.error("Auth error:", err);
+            }
 
-        async function loadProducts() {
+            const grid = document.getElementById('products-grid');
+            const loading = document.getElementById('loading');
+            const countLabel = document.getElementById('product-count');
+
             try {
                 const res = await fetch('/api/products');
                 const products = await res.json();
-                const grid = document.getElementById('products-grid');
+
+                loading.style.display = 'none';
+                countLabel.textContent = `${products.length} articoli`;
+
                 if (!products || products.length === 0) {
-                    grid.innerHTML = '<p style="color: #888;">Nessun prodotto disponibile al momento.</p>';
+                    grid.innerHTML = `
+                        <div class="col-span-full text-center py-16 text-slate-500">
+                            <i class="fa-solid fa-box-open text-3xl mb-3 text-slate-700"></i>
+                            <p class="text-xs sm:text-sm">Nessun prodotto disponibile al momento.</p>
+                        </div>
+                    `;
                     return;
                 }
+
                 grid.innerHTML = products.map(p => `
-                    <div class="card">
-                        <img src="${p.image}" alt="${p.name}">
-                        <h3>${p.name}</h3>
-                        <p style="color: #888; font-size: 0.9rem;">Variante: ${p.variant}</p>
-                        <p style="color: #888;">Stock: ${p.stock}</p>
-                        <p style="font-size: 1.2rem; font-weight: bold; color: #ff003c;">€${Number(p.price).toFixed(2)}</p>
-                        <a href="product.html?id=${p.id}" class="btn">Vedi Dettagli</a>
+                    <div class="bg-slate-900/50 backdrop-blur-xl border border-slate-800/90 rounded-2xl overflow-hidden card-glow flex flex-col justify-between">
+                        <div>
+                            <div class="h-44 sm:h-48 bg-slate-950 overflow-hidden relative border-b border-slate-800/80">
+                                <img src="${p.image || 'https://via.placeholder.com/400x300?text=Nova+Shop'}" alt="${p.name}" class="w-full h-full object-cover">
+                                <div class="absolute top-3 right-3 bg-slate-950/90 backdrop-blur-md text-emerald-400 text-xs font-black px-3 py-1 rounded-xl border border-emerald-500/30 shadow-lg">
+                                    €${Number(p.price).toFixed(2)}
+                                </div>
+                                <div class="absolute bottom-3 left-3 bg-slate-950/90 backdrop-blur-md text-slate-300 text-[10px] font-bold px-2.5 py-1 rounded-lg border border-slate-800">
+                                    Stock: ${p.stock}
+                                </div>
+                            </div>
+                            <div class="p-4 sm:p-5">
+                                <span class="text-[10px] font-extrabold text-red-400 uppercase tracking-widest bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20">${p.variant || 'Standard'}</span>
+                                <h3 class="text-base sm:text-lg font-bold text-white mt-2 mb-1.5 leading-snug">${p.name}</h3>
+                                <p class="text-slate-400 text-xs line-clamp-2 leading-relaxed mb-4">${p.description || 'Nessuna descrizione specificata.'}</p>
+                            </div>
+                        </div>
+                        <div class="p-4 sm:p-5 pt-0">
+                            <a href="/product.html?id=${p.id}" class="block text-center w-full bg-gradient-to-r from-red-600 via-rose-600 to-red-700 hover:from-red-500 hover:to-rose-500 text-white font-bold py-2.5 px-4 rounded-xl transition shadow-lg shadow-red-600/30 text-xs sm:text-sm flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-cart-shopping"></i> Acquista Ora
+                            </a>
+                        </div>
                     </div>
                 `).join('');
-            } catch (err) { console.error(err); }
+
+            } catch (err) {
+                console.error(err);
+                loading.innerHTML = '<p class="text-red-500 text-sm">Errore nel caricamento del catalogo.</p>';
+            }
         }
 
-        checkAuth();
-        loadProducts();
+        loadStore();
     </script>
 </body>
 </html>
