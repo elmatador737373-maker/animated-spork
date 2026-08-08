@@ -9,13 +9,12 @@
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Sfondo profondo in stile dark mode avanzato */
         body {
             background-color: #010103;
             overflow-x: hidden;
         }
 
-        /* Canvas per i fulmini animati */
+        /* Canvas per fulmini elettrici in stile logo */
         #lightning-canvas {
             position: fixed;
             top: 0;
@@ -24,23 +23,22 @@
             height: 100%;
             pointer-events: none;
             z-index: 0;
-            opacity: 0.45;
+            opacity: 0.85;
         }
 
-        /* Bagliori rossi dinamici */
         .glow-sphere {
             position: fixed;
-            width: 500px;
-            height: 500px;
-            background: radial-gradient(circle, rgba(220, 38, 38, 0.2) 0%, transparent 70%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(255, 34, 0, 0.22) 0%, transparent 70%);
             border-radius: 50%;
             pointer-events: none;
             z-index: 0;
-            filter: blur(60px);
+            filter: blur(80px);
         }
 
-        .neon-text-red {
-            text-shadow: 0 0 10px rgba(239, 68, 68, 0.8), 0 0 20px rgba(220, 38, 38, 0.5), 0 0 40px rgba(220, 38, 38, 0.3);
+        .neon-fire {
+            text-shadow: 0 0 12px rgba(255, 34, 0, 0.9), 0 0 25px rgba(255, 51, 51, 0.6), 0 0 50px rgba(255, 0, 0, 0.4);
         }
 
         .card-glow {
@@ -50,20 +48,19 @@
         }
         .card-glow:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 30px -5px rgba(239, 68, 68, 0.3);
-            border-color: rgba(239, 68, 68, 0.6);
+            box-shadow: 0 12px 35px -5px rgba(255, 34, 0, 0.4);
+            border-color: rgba(255, 34, 0, 0.7);
         }
 
-        /* Linea laser superiore */
         .laser-top {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 3px;
-            background: linear-gradient(90deg, transparent, #ef4444, #ff0055, #ef4444, transparent);
+            background: linear-gradient(90deg, transparent, #ff2200, #ff6600, #ff2200, transparent);
             z-index: 100;
-            box-shadow: 0 0 15px #ef4444;
+            box-shadow: 0 0 20px #ff2200;
         }
     </style>
 </head>
@@ -72,17 +69,17 @@
     <div class="laser-top"></div>
     <canvas id="lightning-canvas"></canvas>
     
-    <div class="glow-sphere" style="top: -100px; left: -100px;"></div>
-    <div class="glow-sphere" style="bottom: -100px; right: -100px;"></div>
+    <div class="glow-sphere" style="top: -150px; left: -150px;"></div>
+    <div class="glow-sphere" style="bottom: -150px; right: -150px;"></div>
 
     <!-- NAVBAR -->
-    <header class="bg-slate-950/80 backdrop-blur-xl border-b border-red-950/40 sticky top-0 z-50 py-3.5 px-4 sm:px-8 flex justify-between items-center shadow-2xl">
+    <header class="bg-slate-950/85 backdrop-blur-xl border-b border-red-950/40 sticky top-0 z-50 py-3.5 px-4 sm:px-8 flex justify-between items-center shadow-2xl">
         <a href="/" class="flex items-center gap-3 group z-10">
             <div class="w-11 h-11 rounded-xl overflow-hidden border-2 border-red-500/50 shadow-lg shadow-red-600/40 bg-slate-900 flex items-center justify-center">
-                <img src="/logo.png" alt="Logo" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fa-solid fa-bolt-lightning text-red-500 text-xl\'></i>';">
+                <img src="/logo.png" alt="Logo" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fa-solid fa-bolt-lightning text-[#ff2200] text-xl\'></i>';">
             </div>
             <span class="text-lg sm:text-xl font-black tracking-wider text-white">
-                NOVA<span class="text-red-500 neon-text-red">SHOP</span>
+                NOVA<span class="text-[#ff2200] neon-fire">SHOP</span>
             </span>
         </a>
 
@@ -96,12 +93,12 @@
     <!-- HERO SECTION -->
     <section class="container mx-auto px-4 pt-12 pb-8 text-center max-w-3xl relative z-10">
         <div class="mb-6 flex justify-center">
-            <div class="w-32 h-32 sm:w-40 sm:h-40 rounded-2xl overflow-hidden border-2 border-red-500/60 shadow-2xl shadow-red-600/50 p-1.5 bg-slate-900/90 backdrop-blur-md">
-                <img src="/logo.png" alt="Logo Ufficiale" class="w-full h-full object-cover rounded-xl" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-red-950/35 text-red-500 text-4xl\'><i class=\'fa-solid fa-bolt-lightning\'></i></div>';">
+            <div class="w-32 h-32 sm:w-40 sm:h-40 rounded-2xl overflow-hidden border-2 border-[#ff2200]/60 shadow-2xl shadow-[#ff2200]/50 p-1.5 bg-slate-900/90 backdrop-blur-md">
+                <img src="/logo.png" alt="Logo Ufficiale" class="w-full h-full object-cover rounded-xl" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-red-950/35 text-[#ff2200] text-4xl\'><i class=\'fa-solid fa-bolt-lightning\'></i></div>';">
             </div>
         </div>
         <h1 class="text-3xl sm:text-5xl font-black tracking-tight mb-4 text-white">
-            STORE UFFICIALE DI <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-rose-500 to-orange-500 neon-text-red">NOVA SHOP</span>
+            STORE UFFICIALE DI <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#ff2200] via-rose-500 to-amber-500 neon-fire">NOVA SHOP</span>
         </h1>
         <p class="text-slate-400 text-xs sm:text-sm md:text-base max-w-lg mx-auto">
             Servizi digitali istantanei protetti e garantiti. Effettua l'accesso con Discord per sbloccare l'acquisto immediato.
@@ -112,13 +109,13 @@
     <main class="flex-grow container mx-auto px-4 py-6 max-w-6xl relative z-10">
         <div class="flex items-center justify-between mb-6 border-b border-slate-900 pb-3">
             <h2 class="text-sm sm:text-base font-bold flex items-center gap-2 text-slate-200 uppercase tracking-wider">
-                <i class="fa-solid fa-store text-red-500"></i> Catalogo Prodotti
+                <i class="fa-solid fa-store text-[#ff2200]"></i> Catalogo Prodotti
             </h2>
             <span id="product-count" class="text-xs text-slate-500 font-semibold">Sincronizzazione...</span>
         </div>
 
         <div id="loading" class="text-center py-20 text-slate-500">
-            <i class="fa-solid fa-bolt fa-spin text-3xl mb-3 text-red-600"></i>
+            <i class="fa-solid fa-bolt fa-spin text-3xl mb-3 text-[#ff2200]"></i>
             <p class="text-xs sm:text-sm">Caricamento prodotti dal magazzino...</p>
         </div>
 
@@ -132,9 +129,8 @@
         <p>&copy; 2026 Nova Shop &bull; Secure Discord Integration</p>
     </footer>
 
-    <!-- SCRIPT FULMINI ANIMATI + CARICAMENTO DATI -->
+    <!-- SCRIPT FULMINI ROSSO FUOCO -->
     <script>
-        // Animazione fulmini rossi di sfondo
         const canvas = document.getElementById('lightning-canvas');
         const ctx = canvas.getContext('2d');
         let width, height;
@@ -146,7 +142,7 @@
         window.addEventListener('resize', resize);
         resize();
 
-        class Bolt {
+        class ElectricBolt {
             constructor() {
                 this.reset();
             }
@@ -154,17 +150,16 @@
                 this.x = Math.random() * width;
                 this.y = 0;
                 this.path = [{x: this.x, y: this.y}];
-                this.length = Math.floor(Math.random() * 8) + 5;
-                this.maxAlpha = Math.random() * 0.7 + 0.3;
-                this.alpha = this.maxAlpha;
+                this.segments = Math.floor(Math.random() * 10) + 6;
+                this.alpha = 1.0;
                 this.dead = false;
 
-                let currentX = this.x;
-                let currentY = 0;
-                for(let i=0; i<this.length; i++) {
-                    currentX += (Math.random() - 0.5) * 80;
-                    currentY += Math.random() * (height / this.length);
-                    this.path.push({x: currentX, y: currentY});
+                let cx = this.x;
+                let cy = 0;
+                for(let i=0; i<this.segments; i++) {
+                    cx += (Math.random() - 0.5) * 120;
+                    cy += height / this.segments;
+                    this.path.push({x: cx, y: cy});
                 }
             }
             draw() {
@@ -173,13 +168,18 @@
                 for(let p of this.path) {
                     ctx.lineTo(p.x, p.y);
                 }
-                ctx.strokeStyle = `rgba(239, 68, 68, ${this.alpha})`;
-                ctx.lineWidth = 2;
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = '#ef4444';
+                ctx.strokeStyle = `rgba(255, 34, 0, ${this.alpha})`;
+                ctx.lineWidth = 2.5;
+                ctx.shadowBlur = 25;
+                ctx.shadowColor = '#ff2200';
+                ctx.stroke();
+
+                // Doppia linea interna per effetto fulmine brillante
+                ctx.strokeStyle = `rgba(255, 255, 255, ${this.alpha * 0.8})`;
+                ctx.lineWidth = 1;
                 ctx.stroke();
                 
-                this.alpha -= 0.08;
+                this.alpha -= 0.12;
                 if(this.alpha <= 0) this.dead = true;
             }
         }
@@ -188,8 +188,8 @@
         function animate() {
             ctx.clearRect(0, 0, width, height);
             
-            if(Math.random() < 0.08 && bolts.length < 3) {
-                bolts.push(new Bolt());
+            if(Math.random() < 0.12 && bolts.length < 4) {
+                bolts.push(new ElectricBolt());
             }
 
             for(let i = bolts.length - 1; i >= 0; i--) {
@@ -200,7 +200,7 @@
         }
         animate();
 
-        // Caricamento Dati Utente e Prodotti
+        // Caricamento Dati
         async function loadStore() {
             try {
                 const authRes = await fetch('/api/auth/me');
@@ -249,19 +249,19 @@
                                 <img src="${p.image || 'https://via.placeholder.com/400x300?text=Nova+Shop'}" alt="${p.name}" class="w-full h-full object-cover">
                                 <div class="absolute top-3 right-3 bg-slate-950/90 backdrop-blur-md text-emerald-400 text-xs font-black px-3 py-1 rounded-xl border border-emerald-500/30 shadow-lg">
                                     €${Number(p.price).toFixed(2)}
-                               </div>
+                                </div>
                                 <div class="absolute bottom-3 left-3 bg-slate-950/90 backdrop-blur-md text-slate-300 text-[10px] font-bold px-2.5 py-1 rounded-lg border border-slate-800">
                                     Stock: ${p.stock}
                                 </div>
                             </div>
                             <div class="p-4 sm:p-5">
-                                <span class="text-[10px] font-extrabold text-red-400 uppercase tracking-widest bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20">${p.variant || 'Standard'}</span>
+                                <span class="text-[10px] font-extrabold text-[#ff2200] uppercase tracking-widest bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20">${p.variant || 'Standard'}</span>
                                 <h3 class="text-base sm:text-lg font-bold text-white mt-2 mb-1.5 leading-snug">${p.name}</h3>
                                 <p class="text-slate-400 text-xs line-clamp-2 leading-relaxed mb-4">${p.description || 'Nessuna descrizione specificata.'}</p>
                             </div>
                         </div>
                         <div class="p-4 sm:p-5 pt-0">
-                            <a href="/product.html?id=${p.id}" class="block text-center w-full bg-gradient-to-r from-red-600 via-rose-600 to-red-700 hover:from-red-500 hover:to-rose-500 text-white font-bold py-2.5 px-4 rounded-xl transition shadow-lg shadow-red-600/30 text-xs sm:text-sm flex items-center justify-center gap-2">
+                            <a href="/product.html?id=${p.id}" class="block text-center w-full bg-gradient-to-r from-[#ff2200] via-rose-600 to-red-700 hover:from-red-600 hover:to-rose-500 text-white font-bold py-2.5 px-4 rounded-xl transition shadow-lg shadow-red-600/30 text-xs sm:text-sm flex items-center justify-center gap-2">
                                 <i class="fa-solid fa-cart-shopping"></i> Acquista Ora
                             </a>
                         </div>
