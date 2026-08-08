@@ -6,6 +6,8 @@ const DiscordStrategy = require('passport-discord').Strategy;
 const { createClient } = require('@supabase/supabase-js');
 const { Client, GatewayIntentBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
 const path = require('path');
+const multer = require('multer'); // <--- Importante per i file FormData
+const axios = require('axios');   // <--- Importante per le richieste a Imgur
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -17,6 +19,9 @@ const client = new Client({
 });
 
 const ADMIN_IDS = process.env.ADMIN_DISCORD_IDS ? process.env.ADMIN_DISCORD_IDS.split(',').map(id => id.trim()) : [];
+
+// Configurazione Multer per gestire i file in memoria
+const upload = multer({ limits: { fileSize: 5 * 1024 * 1024 } }); // Limite 5MB
 
 passport.serializeUser((user, done) => done(null, user));
 passport.deserializeUser((obj, done) => done(null, obj));
@@ -40,6 +45,22 @@ app.use(session({
 }));
 app.use(passport.initialize());
 app.use(passport.session());
+
+// Funzione di servizio per caricare l'immagine su Imgur
+async function uploadToImgur(fileBuffer) {
+    if (!process.env.IMGUR_CLIENT_ID) {
+        throw new Error('IMGUR_CLIENT_ID non configurato nel file .env');
+    }
+    const formDataImgur = new URLSearchParams();
+    formDataImgur.append('image', fileBuffer.toString('base64'));
+
+    const response = await axios.post('https://api.imgur.com/3/image', formDataImgur, {
+        headers: {
+            'Authorization': `Client-ID ${process.env.IMGUR_CLIENT_ID}`
+        }
+    });
+    return response.data.data.link;
+}
 
 // Endpoint invisibile per UptimeRobot (Ping Server)
 app.get('/ping', (req, res) => {
@@ -95,9 +116,8 @@ app.post('/api/checkout', async (req, res) => {
     try {
         const orderChannel = await client.channels.fetch(process.env.CHANNEL_ORDERS_ID);
         if (orderChannel) {
-            // Creazione Embed estetico
             const embed = new EmbedBuilder()
-                .setColor(0xF1C40F) // Giallo per "In attesa"
+                .setColor(0xF1C40F)
                 .setTitle(`🛒 Nuovo Ordine #${data[0].id}`)
                 .setDescription(`Un nuovo ordine è stato effettuato su Nova Shop.`)
                 .addFields(
@@ -109,7 +129,6 @@ app.post('/api/checkout', async (req, res) => {
                 .setTimestamp()
                 .setFooter({ text: 'Gestione Ordini Nova Shop' });
 
-            // Pulsanti di gestione
             const row = new ActionRowBuilder().addComponents(
                 new ButtonBuilder()
                     .setCustomId(`approve_${data[0].id}`)
@@ -130,90 +149,112 @@ app.post('/api/checkout', async (req, res) => {
     res.json({ success: true, message: 'Ordine creato!' });
 });
 
-// Admin: Aggiungi Prodotto
-app.post('/api/admin/product', async (req, res) => {
+// Admin: Aggiungi Prodotto (con supporto Upload File -> Imgur)
+app.post('/api/admin/product', upload.single('imageFile'), async (req, res) => {
     if (!req.isAuthenticated() || !ADMIN_IDS.includes(req.user.id)) {
         return res.status(403).json({ error: 'Accesso negato.' });
     }
 
-    const { name, variant, price, stock, description, image } = req.body;
+    let { name, variant, price, stock, description, image } = req.body;
     const parsedStock = parseInt(stock);
 
-    const { data, error } = await supabase.from('products').insert([
-        { name, variant, price, stock: parsedStock, description, image }
-    ]).select();
-
-    if (error) return res.status(500).json({ error: error.message });
-
-    if (parsedStock >= 1) {
-        try {
-            const stockChannel = await client.channels.fetch(process.env.CHANNEL_STOCK_ID);
-            if (stockChannel) {
-                const embed = new EmbedBuilder()
-                    .setColor(0x57F287) // Verde Discord
-                    .setTitle(`${name} Restocked`)
-                    .setDescription(`Our product **${name}** has just been added!`)
-                    .addFields(
-                        { name: 'Variant', value: variant || 'Standard', inline: false },
-                        { name: 'Price', value: `€${price}`, inline: false },
-                        { name: 'Stock', value: `${parsedStock}`, inline: false }
-                    )
-                    .setImage(image || null) // Utilizza l'immagine inviata nel body
-                    .setTimestamp();
-
-                await stockChannel.send({ embeds: [embed] });
-            }
-        } catch (err) {
-            console.error("Errore invio canale stock:", err);
+    try {
+        // Se è stato caricato un file tramite FormData, caricalo su Imgur
+        if (req.file) {
+            image = await uploadToImgur(req.file.buffer);
         }
-    }
 
-    res.json({ success: true, product: data[0] });
+        const { data, error } = await supabase.from('products').insert([
+            { name, variant, price, stock: parsedStock, description, image }
+        ]).select();
+
+        if (error) return res.status(500).json({ error: error.message });
+
+        if (parsedStock >= 1) {
+            try {
+                const stockChannel = await client.channels.fetch(process.env.CHANNEL_STOCK_ID);
+                if (stockChannel) {
+                    const embed = new EmbedBuilder()
+                        .setColor(0x57F287)
+                        .setTitle(`${name} Restocked`)
+                        .setDescription(`Our product **${name}** has just been added!`)
+                        .addFields(
+                            { name: 'Variant', value: variant || 'Standard', inline: false },
+                            { name: 'Price', value: `€${price}`, inline: false },
+                            { name: 'Stock', value: `${parsedStock}`, inline: false }
+                        )
+                        .setImage(image || null)
+                        .setTimestamp();
+
+                    await stockChannel.send({ embeds: [embed] });
+                }
+            } catch (err) {
+                console.error("Errore invio canale stock:", err);
+            }
+        }
+
+        res.json({ success: true, product: data[0] });
+    } catch (err) {
+        console.error("Errore Imgur/Creazione:", err);
+        res.status(500).json({ error: 'Errore durante il caricamento dell\'immagine su Imgur' });
+    }
 });
 
-// Admin: Modifica Prodotto / Aggiorna Stock
-app.put('/api/admin/product/:id', async (req, res) => {
+// Admin: Modifica Prodotto / Aggiorna Stock (con supporto Upload File -> Imgur)
+app.put('/api/admin/product/:id', upload.single('imageFile'), async (req, res) => {
     if (!req.isAuthenticated() || !ADMIN_IDS.includes(req.user.id)) {
         return res.status(403).json({ error: 'Accesso negato.' });
     }
 
     const productId = req.params.id;
-    const { name, variant, price, stock, description, image } = req.body;
+    let { name, variant, price, stock, description, image } = req.body;
     const newStock = parseInt(stock);
 
-    // Recuperiamo il prodotto dal database per avere il contesto corretto
-    const { data: oldProd } = await supabase.from('products').select('stock, name, variant, image').eq('id', productId).single();
+    try {
+        // Recuperiamo il prodotto dal database per avere il contesto precedente
+        const { data: oldProd } = await supabase.from('products').select('stock, name, variant, image').eq('id', productId).single();
 
-    const { data, error } = await supabase.from('products').update({
-        name, variant, price, stock: newStock, description, image
-    }).eq('id', productId).select();
-
-    if (error) return res.status(500).json({ error: error.message });
-
-    if (newStock >= 1 && (!oldProd || oldProd.stock < newStock)) {
-        try {
-            const stockChannel = await client.channels.fetch(process.env.CHANNEL_STOCK_ID);
-            if (stockChannel) {
-                const embed = new EmbedBuilder()
-                    .setColor(0x57F287) // Verde Discord
-                    .setTitle(`${name} Restocked`)
-                    .setDescription(`Our product **${name}** has just been restocked!`)
-                    .addFields(
-                        { name: 'Variant', value: variant || 'Standard', inline: false },
-                        { name: 'Price', value: `€${price}`, inline: false },
-                        { name: 'Stock', value: `${newStock}`, inline: false }
-                    )
-                    .setImage(image || oldProd?.image || null) // Priorità all'immagine aggiornata, fallback su quella esistente
-                    .setTimestamp();
-
-                await stockChannel.send({ embeds: [embed] });
-            }
-        } catch (err) {
-            console.error("Errore invio canale restock:", err);
+        // Se l'utente ha caricato un nuovo file, caricalo su Imgur sovrascrivendo l'immagine
+        if (req.file) {
+            image = await uploadToImgur(req.file.buffer);
+        } else if (!image && oldProd) {
+            image = oldProd.image; // Mantiene la vecchia immagine se non viene passata
         }
-    }
 
-    res.json({ success: true, product: data[0] });
+        const { data, error } = await supabase.from('products').update({
+            name, variant, price, stock: newStock, description, image
+        }).eq('id', productId).select();
+
+        if (error) return res.status(500).json({ error: error.message });
+
+        if (newStock >= 1 && (!oldProd || oldProd.stock < newStock)) {
+            try {
+                const stockChannel = await client.channels.fetch(process.env.CHANNEL_STOCK_ID);
+                if (stockChannel) {
+                    const embed = new EmbedBuilder()
+                        .setColor(0x57F287)
+                        .setTitle(`${name} Restocked`)
+                        .setDescription(`Our product **${name}** has just been restocked!`)
+                        .addFields(
+                            { name: 'Variant', value: variant || 'Standard', inline: false },
+                            { name: 'Price', value: `€${price}`, inline: false },
+                            { name: 'Stock', value: `${newStock}`, inline: false }
+                        )
+                        .setImage(image || oldProd?.image || null)
+                        .setTimestamp();
+
+                    await stockChannel.send({ embeds: [embed] });
+                }
+            } catch (err) {
+                console.error("Errore invio canale restock:", err);
+            }
+        }
+
+        res.json({ success: true, product: data[0] });
+    } catch (err) {
+        console.error("Errore Imgur/Modifica:", err);
+        res.status(500).json({ error: 'Errore durante il caricamento della nuova immagine su Imgur' });
+    }
 });
 
 // Rotte Pagine HTML
