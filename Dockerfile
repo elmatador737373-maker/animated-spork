@@ -16,12 +16,9 @@ RUN apt-get update && apt-get install -y \
     python3-venv \
     && rm -rf /var/lib/apt/lists/*
 
-# Copia l'interfaccia personalizzata
-COPY index.html /index.html
-
 ENV PORT=10000
 
 EXPOSE 10000
 
-# Avvia ttyd abilitando la scrittura (-W) e servendo l'HTML personalizzato
-CMD ["sh", "-c", "ttyd -p $PORT -I /index.html -W bash"]
+# Avvia ttyd abilitando la scrittura (-W) e configurando Xterm.js
+CMD ["sh", "-c", "ttyd -p $PORT -W -t enableZmodem=true -t fontSize=14 bash"]
