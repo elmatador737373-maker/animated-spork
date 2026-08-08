@@ -1,128 +1,88 @@
-require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
-const path = require('path');
+const session = require('express-session');
 const { createClient } = require('@supabase/supabase-js');
-const { 
-    Client, 
-    GatewayIntentBits, 
-    EmbedBuilder, 
-    ActionRowBuilder, 
-    ButtonBuilder, 
-    ButtonStyle 
-} = require('discord.js');
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+require('dotenv').config();
 
 const app = express();
 app.use(express.json());
-app.use(cors());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static('public'));
 
-// Inizializzazione Supabase
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+// Configurazione Sessioni
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'super_secret_key_nova_shop',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false } // Imposta true se usi HTTPS in produzione
+}));
 
-// Rotta per UptimeRobot
-app.get('/ping', (req, res) => {
-    res.status(200).send('OK - Nova Shop is Alive');
+// Configurazione Supabase
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+const DISCORD_SERVER_URL = "https://discord.gg/7r46nnRBvY";
+
+// --- ROTTE OAUTH2 DISCORD ---
+app.get('/auth/discord', (req, res) => {
+    const discordLoginUrl = `https://discord.com/api/oauth2/authorize?client_id=${process.env.DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.DISCORD_REDIRECT_URI)}&response_type=code&scope=identify`;
+    res.redirect(discordLoginUrl);
 });
 
-// BOT DISCORD SETUP
-const client = new Client({ 
-    intents: [
-        GatewayIntentBits.Guilds, 
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.DirectMessages
-    ] 
-});
+app.get('/auth/discord/callback', async (req, res) => {
+    const code = req.query.code;
+    if (!code) return res.status(400).send('Codice di autorizzazione mancante.');
 
-client.once('ready', () => {
-    console.log(`[BOT] Loggato come ${client.user.tag}`);
-});
-
-// Gestione pulsanti interattivi
-client.on('interactionCreate', async (interaction) => {
-    if (!interaction.isButton()) return;
-
-    const [action, orderId] = interaction.customId.split('_');
-    
-    // Recupera ordine da Supabase
-    const { data: order, error: fetchErr } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('id', orderId)
-        .single();
-
-    if (fetchErr || !order) {
-        return interaction.reply({ content: 'Ordine non trovato.', ephemeral: true });
-    }
-
-    if (action === 'cancel') {
-        await supabase.from('orders').update({ status: 'Annullato' }).eq('id', orderId);
-        await interaction.update({ 
-            content: `❌ **ORDINE ANNULLATO** da ${interaction.user.tag}`, 
-            components: [] 
+    try {
+        const tokenRes = await fetch('https://discord.com/api/oauth2/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                client_id: process.env.DISCORD_CLIENT_ID,
+                client_secret: process.env.DISCORD_CLIENT_SECRET,
+                grant_type: 'authorization_code',
+                code: code,
+                redirect_uri: process.env.DISCORD_REDIRECT_URI,
+            })
         });
-    } 
-    else if (action === 'paid') {
-        await supabase.from('orders').update({ status: 'Pagamento Verificato' }).eq('id', orderId);
-        
-        const updatedEmbed = EmbedBuilder.from(interaction.message.embeds[0])
-            .setColor('#3b82f6')
-            .setFields(
-                { name: 'Stato', value: '🟡 Pagamento Verificato (In Lavorazione)' },
-                { name: 'Cliente', value: order.customer },
-                { name: 'Prodotto', value: order.product_name },
-                { name: 'Totale', value: `€${order.price.toFixed(2)}` }
-            );
 
-        await interaction.update({ embeds: [updatedEmbed] });
-    } 
-    else if (action === 'complete') {
-        await supabase.from('orders').update({ status: 'Completato' }).eq('id', orderId);
+        const tokenData = await tokenRes.json();
+        if (!tokenData.access_token) return res.status(400).send('Autenticazione Discord fallita.');
 
-        const completedChannel = await client.channels.fetch(process.env.CHANNEL_COMPLETED_ID).catch(() => null);
-        if (completedChannel) {
-            const completeEmbed = new EmbedBuilder()
-                .setTitle(`🎉 Ordine Completato #${order.id}`)
-                .setColor('#10b981')
-                .addFields(
-                    { name: 'Cliente', value: order.customer, inline: true },
-                    { name: 'Prodotto', value: order.product_name, inline: true },
-                    { name: 'Prezzo', value: `€${order.price.toFixed(2)}`, inline: true }
-                )
-                .setTimestamp();
-            await completedChannel.send({ embeds: [completeEmbed] });
-        }
-
-        try {
-            if (order.discord_user_id) {
-                const user = await client.users.fetch(order.discord_user_id);
-                const invoiceEmbed = new EmbedBuilder()
-                    .setTitle(`📄 FATTURA D'ACQUISTO - NOVA SHOP`)
-                    .setDescription(`Grazie per il tuo acquisto! Ecco la ricevuta del tuo ordine.`)
-                    .setColor('#ff003c')
-                    .addFields(
-                        { name: 'ID Ordine', value: order.id, inline: true },
-                        { name: 'Prodotto', value: order.product_name, inline: true },
-                        { name: 'Importo Pagato', value: `€${order.price.toFixed(2)}`, inline: true },
-                        { name: 'Stato', value: 'COMPLETATO & CONSEGNATO' }
-                    )
-                    .setFooter({ text: 'NOVA SHOP - https://discord.gg/7r46nnRBvY' })
-                    .setTimestamp();
-
-                await user.send({ embeds: [invoiceEmbed] });
-            }
-        } catch (err) {
-            console.log("Impossibile inviare il DM all'utente:", err.message);
-        }
-
-        await interaction.update({ 
-            content: `✅ **ORDINE COMPLETATO** gestito da ${interaction.user.tag}`, 
-            components: [] 
+        const userRes = await fetch('https://discord.com/api/users/@me', {
+            headers: { Authorization: `Bearer ${tokenData.access_token}` }
         });
+        const userData = await userRes.json();
+
+        req.session.user = {
+            id: userData.id,
+            username: userData.username,
+            global_name: userData.global_name || userData.username,
+            avatar: userData.avatar ? `https://cdn.discordapp.com/avatars/${userData.id}/${userData.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png'
+        };
+
+        res.redirect('/index.html');
+    } catch (err) {
+        console.error('Errore OAuth Discord:', err);
+        res.status(500).send('Errore interno del server durante il login.');
     }
 });
 
-// API PRODOTTI
+app.get('/api/auth/me', (req, res) => {
+    if (req.session && req.session.user) {
+        res.json({ loggedIn: true, user: req.session.user });
+    } else {
+        res.json({ loggedIn: false });
+    }
+});
+
+app.get('/auth/logout', (req, res) => {
+    req.session.destroy(() => {
+        res.redirect('/index.html');
+    });
+});
+
+// --- API PRODOTTI E ORDINI ---
 app.get('/api/products', async (req, res) => {
     const { data, error } = await supabase.from('products').select('*');
     if (error) return res.status(500).json({ error: error.message });
@@ -131,124 +91,76 @@ app.get('/api/products', async (req, res) => {
 
 app.get('/api/products/:id', async (req, res) => {
     const { data, error } = await supabase.from('products').select('*').eq('id', req.params.id).single();
-    if (error || !data) return res.status(404).json({ error: 'Prodotto non trovato' });
+    if (error) return res.status(404).json({ error: 'Prodotto non trovato' });
     res.json(data);
 });
 
 app.post('/api/products', async (req, res) => {
-    const { name, variant, price, stock, description, image } = req.body;
+    const { name, variant, price, stock, image, description } = req.body;
+    const { data, error } = await supabase.from('products').insert([{ name, variant, price, stock, image, description }]).select();
     
-    const newProduct = {
-        name, 
-        variant: variant || name, 
-        price: parseFloat(price), 
-        stock: parseInt(stock), 
-        description, 
-        image
-    };
-    
-    const { data, error } = await supabase.from('products').insert([newProduct]).select().single();
     if (error) return res.status(500).json({ error: error.message });
 
-    try {
-        const stockChannel = await client.channels.fetch(process.env.CHANNEL_STOCK_ID);
-        if (stockChannel) {
-            const restockEmbed = new EmbedBuilder()
-                .setColor('#22c55e')
-                .setTitle(`${data.name} Restocked`)
-                .setDescription(`Our product **${data.name}** has just been restocked!\n[Buy Now](http://localhost:3000/product.html?id=${data.id})`)
-                .addFields(
-                    { name: 'Variant', value: data.variant },
-                    { name: 'Price', value: `€${data.price.toFixed(2).replace('.', ',')}` },
-                    { name: 'Stock', value: `${data.stock}` }
-                )
-                .setImage(data.image)
-                .setFooter({ text: 'Momentaneo Nova', iconURL: client.user.displayAvatarURL() });
-
-            await stockChannel.send({ embeds: [restockEmbed] });
+    // Invio eventuale webhook Discord di restock se configurato
+    if (process.env.DISCORD_WEBHOOK_URL) {
+        try {
+            await fetch(process.env.DISCORD_WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    embeds: [{
+                        title: "🚀 NUOVO RESTOCK / PRODOTTO!",
+                        description: `**${name}**\nPrezzo: **€${price}**\nStock: **${stock}**`,
+                        color: 16711680,
+                        url: `${process.env.SITE_URL || 'http://localhost:3000'}/product.html?id=${data[0].id}`
+                    }]
+                })
+            });
+        } catch (webhookErr) {
+            console.error('Errore invio webhook Discord:', webhookErr);
         }
-    } catch (err) {
-        console.error("Errore invio embed restock:", err);
     }
 
-    res.json({ success: true, product: data });
+    res.json({ success: true, product: data[0] });
 });
 
-// API ORDINI
 app.post('/api/orders', async (req, res) => {
-    const { productId, customer, discordUserId } = req.body;
-    
-    // Controlla prodotto e stock
-    const { data: prod, error: prodErr } = await supabase.from('products').select('*').eq('id', productId).single();
-    if (prodErr || !prod || prod.stock <= 0) {
-        return res.status(400).json({ error: 'Prodotto esaurito o non valido.' });
+    if (!req.session || !req.session.user) {
+        return res.status(401).json({ error: 'Devi effettuare il login con Discord per ordinare.' });
     }
 
-    const orderId = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
-    const newOrder = {
-        id: orderId,
-        product_id: prod.id,
-        product_name: prod.name,
-        price: prod.price,
-        customer: customer || 'Utente Guest',
-        discord_user_id: discordUserId || null,
-        status: 'In attesa di apertura ticket e pagamento'
-    };
+    const { productId } = req.body;
+    const customer = `${req.session.user.global_name} (${req.session.user.username} - ID: ${req.session.user.id})`;
 
-    const { error: orderErr } = await supabase.from('orders').insert([newOrder]);
-    if (orderErr) return res.status(500).json({ error: orderErr.message });
+    const { data: product, error: prodError } = await supabase.from('products').select('*').eq('id', productId).single();
+    if (prodError || !product) return res.status(404).json({ error: 'Prodotto non trovato.' });
 
-    // Scala lo stock nel database
-    await supabase.from('products').update({ stock: prod.stock - 1 }).eq('id', prod.id);
+    if (product.stock <= 0) return res.status(400).json({ error: 'Prodotto esaurito.' });
 
-    try {
-        const orderChannel = await client.channels.fetch(process.env.CHANNEL_ORDERS_ID);
-        if (orderChannel) {
-            const orderEmbed = new EmbedBuilder()
-                .setTitle(`🛒 Nuovo Ordine #${newOrder.id}`)
-                .setColor('#ff003c')
-                .addFields(
-                    { name: 'Stato', value: `🔴 ${newOrder.status}` },
-                    { name: 'Cliente', value: newOrder.customer, inline: true },
-                    { name: 'Prodotto', value: newOrder.product_name, inline: true },
-                    { name: 'Totale', value: `€${newOrder.price.toFixed(2)}`, inline: true }
-                )
-                .setTimestamp();
+    const { data: orderData, error: orderError } = await supabase.from('orders').insert([{
+        product_id: product.id,
+        product_name: product.name,
+        customer: customer,
+        price: product.price,
+        status: 'In attesa di pagamento'
+    }]).select();
 
-            const row = new ActionRowBuilder().addComponents(
-                new ButtonBuilder()
-                    .setCustomId(`paid_${newOrder.id}`)
-                    .setLabel('Segna Come Pagato')
-                    .setStyle(ButtonStyle.Primary),
-                new ButtonBuilder()
-                    .setCustomId(`complete_${newOrder.id}`)
-                    .setLabel('Completato')
-                    .setStyle(ButtonStyle.Success),
-                new ButtonBuilder()
-                    .setCustomId(`cancel_${newOrder.id}`)
-                    .setLabel('Annulla')
-                    .setStyle(ButtonStyle.Danger)
-            );
+    if (orderError) return res.status(500).json({ error: orderError.message });
 
-            await orderChannel.send({ embeds: [orderEmbed], components: [row] });
-        }
-    } catch (err) {
-        console.error("Errore invio log ordine:", err);
-    }
+    await supabase.from('products').update({ stock: product.stock - 1 }).eq('id', productId);
 
     res.json({ 
         success: true, 
-        order: newOrder, 
-        discordServerUrl: "https://discord.gg/7r46nnRBvY" 
+        order: orderData[0], 
+        discordServerUrl: DISCORD_SERVER_URL 
     });
 });
 
 app.get('/api/orders', async (req, res) => {
-    const { data, error } = await supabase.from('orders').select('*');
+    const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
     if (error) return res.status(500).json({ error: error.message });
     res.json(data);
 });
 
 const PORT = process.env.PORT || 3000;
-client.login(process.env.DISCORD_BOT_TOKEN);
-app.listen(PORT, () => console.log(`[SERVER] In ascolto sulla porta ${PORT} con Supabase`));
+app.listen(PORT, () => console.log(`Server avviato sulla porta ${PORT}`));
