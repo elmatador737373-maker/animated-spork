@@ -73,6 +73,8 @@ app.get('/api/orders', async (req, res) => {
     res.json(data);
 });
 
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+
 // Checkout e Notifica Discord Ordini
 app.post('/api/checkout', async (req, res) => {
     if (!req.isAuthenticated()) return res.status(401).json({ error: 'Devi effettuare il login con Discord!' });
@@ -95,15 +97,33 @@ app.post('/api/checkout', async (req, res) => {
     try {
         const orderChannel = await client.channels.fetch(process.env.CHANNEL_ORDERS_ID);
         if (orderChannel) {
+            // Creazione Embed estetico
+            const embed = new EmbedBuilder()
+                .setColor(0xF1C40F) // Giallo per "In attesa"
+                .setTitle(`🛒 Nuovo Ordine #${data[0].id}`)
+                .setDescription(`Un nuovo ordine è stato effettuato su Nova Shop.`)
+                .addFields(
+                    { name: '👤 Cliente', value: `\`${customerName}\``, inline: true },
+                    { name: '📦 Prodotto', value: productName, inline: true },
+                    { name: '💰 Prezzo', value: `€${price}`, inline: true },
+                    { name: '⚠️ Stato', value: 'In attesa di ticket e pagamento.', inline: false }
+                )
+                .setTimestamp()
+                .setFooter({ text: 'Gestione Ordini Nova Shop' });
+
+            // Pulsanti di gestione
             const row = new ActionRowBuilder().addComponents(
-                new ButtonBuilder().setCustomId(`approve_${data[0].id}`).setLabel('Approva Pagamento').setStyle(ButtonStyle.Success),
-                new ButtonBuilder().setCustomId(`complete_${data[0].id}`).setLabel('Completa Ordine').setStyle(ButtonStyle.Primary)
+                new ButtonBuilder()
+                    .setCustomId(`approve_${data[0].id}`)
+                    .setLabel('Approva Pagamento')
+                    .setStyle(ButtonStyle.Success),
+                new ButtonBuilder()
+                    .setCustomId(`complete_${data[0].id}`)
+                    .setLabel('Completa Ordine')
+                    .setStyle(ButtonStyle.Primary)
             );
 
-            await orderChannel.send({
-                content: `🛒 **Nuovo Ordine #${data[0].id}**\n👤 **Cliente:** ${customerName}\n📦 **Prodotto:** ${productName}\n💰 **Prezzo:** €${price}\n⚠️ *In attesa di ticket e pagamento.*`,
-                components: [row]
-            });
+            await orderChannel.send({ embeds: [embed], components: [row] });
         }
     } catch (err) {
         console.error("Errore invio Discord:", err);
@@ -111,6 +131,8 @@ app.post('/api/checkout', async (req, res) => {
 
     res.json({ success: true, message: 'Ordine creato!' });
 });
+
+const { EmbedBuilder } = require('discord.js');
 
 // Admin: Aggiungi Prodotto
 app.post('/api/admin/product', async (req, res) => {
@@ -131,7 +153,19 @@ app.post('/api/admin/product', async (req, res) => {
         try {
             const stockChannel = await client.channels.fetch(process.env.CHANNEL_STOCK_ID);
             if (stockChannel) {
-                stockChannel.send(`⚡ **NUOVO PRODOTTO DISPONIBILE SU NOVA SHOP!** ⚡\n\n📦 **${name}** ${variant ? '('+variant+')' : ''}\n💰 Prezzo: **€${price}**\n🔢 Stock: **${parsedStock}** pezzi\n🔗 Corri sul sito a comprarlo!`);
+                const embed = new EmbedBuilder()
+                    .setColor(0x57F287) // Verde Discord
+                    .setTitle(`${name} Restocked`)
+                    .setDescription(`Our product **${name}** has just been added!`)
+                    .addFields(
+                        { name: 'Variant', value: variant || 'Standard', inline: false },
+                        { name: 'Price', value: `€${price}`, inline: false },
+                        { name: 'Stock', value: `${parsedStock}`, inline: false }
+                    )
+                    .setImage(image || null) // Utilizza l'immagine inviata nel body
+                    .setTimestamp();
+
+                await stockChannel.send({ embeds: [embed] });
             }
         } catch (err) {
             console.error("Errore invio canale stock:", err);
@@ -151,7 +185,8 @@ app.put('/api/admin/product/:id', async (req, res) => {
     const { name, variant, price, stock, description, image } = req.body;
     const newStock = parseInt(stock);
 
-    const { data: oldProd } = await supabase.from('products').select('stock, name, variant').eq('id', productId).single();
+    // Recuperiamo il prodotto dal database per avere il contesto corretto
+    const { data: oldProd } = await supabase.from('products').select('stock, name, variant, image').eq('id', productId).single();
 
     const { data, error } = await supabase.from('products').update({
         name, variant, price, stock: newStock, description, image
@@ -163,7 +198,19 @@ app.put('/api/admin/product/:id', async (req, res) => {
         try {
             const stockChannel = await client.channels.fetch(process.env.CHANNEL_STOCK_ID);
             if (stockChannel) {
-                stockChannel.send(`🔥 **RESTOCK AGGIORNATO SU NOVA SHOP!** 🔥\n\n📦 **${name}** ${variant ? '('+variant+')' : ''}\n🔢 Nuovo Stock: **${newStock}** pezzi\n💰 Prezzo: **€${price}**\n🔗 Corri sul sito prima che finisca!`);
+                const embed = new EmbedBuilder()
+                    .setColor(0x57F287) // Verde Discord
+                    .setTitle(`${name} Restocked`)
+                    .setDescription(`Our product **${name}** has just been restocked!`)
+                    .addFields(
+                        { name: 'Variant', value: variant || 'Standard', inline: false },
+                        { name: 'Price', value: `€${price}`, inline: false },
+                        { name: 'Stock', value: `${newStock}`, inline: false }
+                    )
+                    .setImage(image || oldProd?.image || null) // Priorità all'immagine aggiornata, fallback su quella esistente
+                    .setTimestamp();
+
+                await stockChannel.send({ embeds: [embed] });
             }
         } catch (err) {
             console.error("Errore invio canale restock:", err);
@@ -171,18 +218,6 @@ app.put('/api/admin/product/:id', async (req, res) => {
     }
 
     res.json({ success: true, product: data[0] });
-});
-
-// Admin: Elimina Prodotto
-app.delete('/api/admin/product/:id', async (req, res) => {
-    if (!req.isAuthenticated() || !ADMIN_IDS.includes(req.user.id)) {
-        return res.status(403).json({ error: 'Accesso negato.' });
-    }
-
-    const { error } = await supabase.from('products').delete().eq('id', req.params.id);
-    if (error) return res.status(500).json({ error: error.message });
-
-    res.json({ success: true });
 });
 
 // Rotte Pagine HTML
