@@ -9,56 +9,77 @@
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Stesso sfondo dinamico con bagliori e fulmini rossi */
         body {
-            background-color: #020204;
-            background-image: 
-                radial-gradient(circle at 15% 10%, rgba(220, 38, 38, 0.22) 0%, transparent 45%),
-                radial-gradient(circle at 85% 85%, rgba(185, 28, 28, 0.15) 0%, transparent 45%),
-                linear-gradient(to right, rgba(220, 38, 38, 0.03) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(220, 38, 38, 0.03) 1px, transparent 1px);
-            background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
-            background-attachment: fixed;
+            background-color: #010103;
+            overflow-x: hidden;
         }
 
-        .neon-glow {
-            text-shadow: 0 0 25px rgba(239, 68, 68, 0.6), 0 0 50px rgba(220, 38, 38, 0.3);
-        }
-
-        .laser-line {
+        #lightning-canvas {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, rgba(239, 68, 68, 0.8), transparent);
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.45;
+        }
+
+        .glow-sphere {
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(220, 38, 38, 0.2) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            filter: blur(60px);
+        }
+
+        .neon-text-red {
+            text-shadow: 0 0 10px rgba(239, 68, 68, 0.8), 0 0 20px rgba(220, 38, 38, 0.5), 0 0 40px rgba(220, 38, 38, 0.3);
+        }
+
+        .laser-top {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #ef4444, #ff0055, #ef4444, transparent);
             z-index: 100;
+            box-shadow: 0 0 15px #ef4444;
         }
     </style>
 </head>
-<body class="text-slate-100 min-h-screen flex flex-col justify-between font-sans selection:bg-red-600 selection:text-white">
+<body class="text-slate-100 min-h-screen flex flex-col justify-between font-sans selection:bg-red-600 selection:text-white relative">
 
-    <div class="laser-line"></div>
+    <div class="laser-top"></div>
+    <canvas id="lightning-canvas"></canvas>
+
+    <div class="glow-sphere" style="top: -100px; left: -100px;"></div>
+    <div class="glow-sphere" style="bottom: -100px; right: -100px;"></div>
 
     <!-- NAVBAR -->
-    <header class="bg-slate-950/80 backdrop-blur-xl border-b border-red-950/40 sticky top-0 z-50 py-3.5 px-4 sm:px-8 flex justify-between items-center">
-        <a href="/" class="text-base sm:text-xl font-black tracking-wider text-white flex items-center gap-2.5">
-            <div class="bg-gradient-to-br from-red-600 via-rose-700 to-black p-2 rounded-xl shadow-lg shadow-red-600/30 border border-red-500/40 text-white">
-                <i class="fa-solid fa-bolt-lightning text-red-400"></i>
+    <header class="bg-slate-950/80 backdrop-blur-xl border-b border-red-950/40 sticky top-0 z-50 py-3.5 px-4 sm:px-8 flex justify-between items-center shadow-2xl">
+        <a href="/" class="flex items-center gap-3 group z-10">
+            <div class="w-11 h-11 rounded-xl overflow-hidden border-2 border-red-500/50 shadow-lg shadow-red-600/40 bg-slate-900 flex items-center justify-center">
+                <img src="/logo.png" alt="Logo" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fa-solid fa-bolt-lightning text-red-500 text-xl\'></i>';">
             </div>
-            <span>NOVA<span class="text-red-500 neon-glow">SHOP</span></span>
+            <span class="text-lg sm:text-xl font-black tracking-wider text-white">
+                NOVA<span class="text-red-500 neon-text-red">SHOP</span>
+            </span>
         </a>
 
-        <!-- Auth Area -->
-        <div id="auth-container">
-            <a href="/auth/discord" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition shadow-lg shadow-indigo-600/20 flex items-center gap-2">
+        <div id="auth-container" class="z-10">
+            <a href="/auth/discord" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition shadow-lg shadow-indigo-600/30 flex items-center gap-2 border border-indigo-500/30">
                 <i class="fa-brands fa-discord text-base"></i> <span class="hidden xs:inline">Login con Discord</span>
             </a>
         </div>
     </header>
 
-    <!-- MAIN PRODUCT CONTENT -->
-    <main class="flex-grow container mx-auto px-4 py-8 sm:py-12 max-w-4xl">
+    <!-- MAIN CONTENT -->
+    <main class="flex-grow container mx-auto px-4 py-8 sm:py-12 max-w-4xl relative z-10">
         <a href="/" class="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-400 hover:text-red-400 mb-6 transition">
             <i class="fa-solid fa-arrow-left"></i> Torna al catalogo
         </a>
@@ -68,7 +89,7 @@
             <p class="text-xs sm:text-sm">Caricamento dettagli prodotto...</p>
         </div>
 
-        <div id="product-detail" class="hidden grid grid-cols-1 md:grid-cols-2 gap-8 bg-slate-900/50 backdrop-blur-xl border border-slate-800/90 rounded-3xl p-6 sm:p-8 shadow-2xl">
+        <div id="product-detail" class="hidden grid grid-cols-1 md:grid-cols-2 gap-8 bg-slate-900/60 backdrop-blur-xl border border-slate-800/90 rounded-3xl p-6 sm:p-8 shadow-2xl">
             <!-- Immagine Prodotto -->
             <div class="rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 h-64 sm:h-80 relative flex items-center justify-center">
                 <img id="p-image" src="" alt="Prodotto" class="w-full h-full object-cover">
@@ -90,21 +111,83 @@
 
                 <!-- Azione / Pulsante Acquista -->
                 <div id="buy-section">
-                    <!-- Iniettato via JS in base allo stock e login -->
+                    <!-- Iniettato via JS -->
                 </div>
             </div>
         </div>
     </main>
 
     <!-- FOOTER -->
-    <footer class="bg-slate-950/80 border-t border-red-950/30 py-6 text-center text-xs text-slate-600">
+    <footer class="bg-slate-950/80 border-t border-red-950/30 py-6 text-center text-xs text-slate-600 relative z-10">
         <p>&copy; 2026 Nova Shop &bull; Secure Discord Integration</p>
     </footer>
 
-    <!-- SCRIPT -->
+    <!-- SCRIPT FULMINI + LOGICA PRODOTTO -->
     <script>
+        const canvas = document.getElementById('lightning-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Bolt {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * width;
+                this.y = 0;
+                this.path = [{x: this.x, y: this.y}];
+                this.length = Math.floor(Math.random() * 8) + 5;
+                this.maxAlpha = Math.random() * 0.7 + 0.3;
+                this.alpha = this.maxAlpha;
+                this.dead = false;
+
+                let currentX = this.x;
+                let currentY = 0;
+                for(let i=0; i<this.length; i++) {
+                    currentX += (Math.random() - 0.5) * 80;
+                    currentY += Math.random() * (height / this.length);
+                    this.path.push({x: currentX, y: currentY});
+                }
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.moveTo(this.path[0].x, this.path[0].y);
+                for(let p of this.path) {
+                    ctx.lineTo(p.x, p.y);
+                }
+                ctx.strokeStyle = `rgba(239, 68, 68, ${this.alpha})`;
+                ctx.lineWidth = 2;
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = '#ef4444';
+                ctx.stroke();
+                
+                this.alpha -= 0.08;
+                if(this.alpha <= 0) this.dead = true;
+            }
+        }
+
+        let bolts = [];
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            if(Math.random() < 0.08 && bolts.length < 3) {
+                bolts.push(new Bolt());
+            }
+            for(let i = bolts.length - 1; i >= 0; i--) {
+                bolts[i].draw();
+                if(bolts[i].dead) bolts.splice(i, 1);
+            }
+            requestAnimationFrame(animate);
+        }
+        animate();
+
         async function loadProductPage() {
-            // 1. Auth check
             let isLogged = false;
             try {
                 const authRes = await fetch('/api/auth/me');
@@ -126,7 +209,6 @@
                 console.error("Auth error:", err);
             }
 
-            // 2. Prendi ID prodotto dall'URL
             const urlParams = new URLSearchParams(window.location.search);
             const productId = urlParams.get('id');
 
@@ -195,7 +277,7 @@
                 const data = await res.json();
 
                 if (res.ok) {
-                    alert("Acquisto completato con successo! Controlla i tuoi messaggi o Discord.");
+                    alert("Acquisto completato con successo!");
                     window.location.href = '/';
                 } else {
                     alert("Errore durante l'acquisto: " + (data.error || 'Riprova più tardi.'));
