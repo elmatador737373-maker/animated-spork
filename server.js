@@ -37,6 +37,24 @@ const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// --- MIDDLEWARE CONTROLLO ADMIN ---
+const checkAdmin = (req, res, next) => {
+    // Verifica se l'utente è loggato tramite Discord OAuth2
+    if (!req.session || !req.session.user) {
+        return res.status(401).json({ error: 'Devi effettuare il login con Discord.' });
+    }
+
+    const userId = req.session.user.id;
+    const adminIds = process.env.ADMIN_DISCORD_IDS ? process.env.ADMIN_DISCORD_IDS.split(',') : [];
+
+    // Controlla se l'ID dell'utente loggato è tra quelli degli owner
+    if (!adminIds.includes(userId)) {
+        return res.status(403).json({ error: 'Accesso negato: questa azione è riservata agli Owner.' });
+    }
+
+    next(); // L'utente è un owner, procedi con la richiesta
+};
+
 const DISCORD_SERVER_URL = "https://discord.gg/7r46nnRBvY";
 
 // --- BOT DISCORD SETUP ---
