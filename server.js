@@ -130,8 +130,6 @@ app.post('/api/checkout', async (req, res) => {
     res.json({ success: true, message: 'Ordine creato!' });
 });
 
-const { EmbedBuilder } = require('discord.js');
-
 // Admin: Aggiungi Prodotto
 app.post('/api/admin/product', async (req, res) => {
     if (!req.isAuthenticated() || !ADMIN_IDS.includes(req.user.id)) {
