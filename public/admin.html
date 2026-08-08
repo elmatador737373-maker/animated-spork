@@ -4,24 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nova Shop - Pannello Admin</title>
+    <link rel="stylesheet" href="/style.css"> <!-- O inserisci lo stile sopra -->
     <style>
-        body, html { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background-color: #030000; color: white; overflow-x: hidden; }
-        .lightning-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: radial-gradient(circle, rgba(180,0,0,0.2) 0%, rgba(3,0,0,1) 90%); z-index: -1; animation: flash 4s infinite; }
-        @keyframes flash { 0%, 90%, 96%, 100% { opacity: 0.7; } 92%, 94% { opacity: 1; background: radial-gradient(circle, rgba(255,40,0,0.5) 0%, rgba(30,0,0,1) 90%); } }
-        nav { display: flex; justify-content: space-between; align-items: center; padding: 15px 40px; background: rgba(10,0,0,0.95); border-bottom: 2px solid #ff2a00; }
-        .logo-container { display: flex; align-items: center; gap: 15px; }
-        .logo { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #ff2a00; object-fit: cover; }
-        .nav-links { display: flex; gap: 20px; align-items: center; }
-        .nav-links a { color: white; text-decoration: none; font-weight: bold; }
-        .btn-discord { background: #5865F2; padding: 8px 16px; border-radius: 6px; display: flex; align-items: center; gap: 8px; }
-        .btn-logout { background: #ff2a00; padding: 6px 12px; border-radius: 5px; font-size: 0.9rem; }
-        .user-profile { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); padding: 5px 15px; border-radius: 20px; border: 1px solid #441111; }
-        .user-profile img { width: 32px; height: 32px; border-radius: 50%; }
-        .container { max-width: 800px; margin: 0 auto; padding: 40px 20px; }
-        h1 { text-align: center; color: #ff3300; text-shadow: 0 0 10px rgba(255,50,0,0.5); }
-        .admin-panel { background: rgba(30, 0, 0, 0.95); border: 2px dashed #ff2a00; padding: 30px; border-radius: 10px; margin-top: 20px; }
-        .admin-panel input, .admin-panel textarea { width: 100%; padding: 12px; margin: 10px 0; background: #111; border: 1px solid #441111; color: white; border-radius: 4px; box-sizing: border-box; }
-        .admin-panel button { background: #00aa55; color: white; border: none; padding: 12px 20px; font-weight: bold; cursor: pointer; border-radius: 4px; width: 100%; font-size: 1.1rem; }
+        .admin-box { background: rgba(20, 0, 0, 0.9); border: 2px solid #ff2a00; padding: 20px; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 0 20px rgba(255,42,0,0.2); }
+        .admin-box input, .admin-box textarea, .admin-box select { width: 100%; padding: 12px; margin: 8px 0; background: #0d0000; border: 1px solid #551111; color: white; border-radius: 6px; font-size: 1rem; }
+        .btn-submit { background: #ff2a00; color: white; border: none; padding: 12px; font-weight: bold; cursor: pointer; border-radius: 6px; width: 100%; font-size: 1.1rem; box-shadow: 0 0 10px rgba(255,42,0,0.5); transition: 0.2s; }
+        .btn-submit:hover { background: #cc2200; }
+        
+        .product-manage-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 15px; }
+        .manage-card { background: rgba(15, 0, 0, 0.85); border: 1px solid #441111; border-radius: 8px; padding: 15px; }
+        .manage-card input { width: 100%; padding: 8px; margin: 5px 0; background: #050000; border: 1px solid #331111; color: #fff; border-radius: 4px; font-size: 0.9rem; }
+        .btn-group { display: flex; gap: 8px; margin-top: 10px; }
+        .btn-update { background: #00aa55; color: white; border: none; padding: 8px; border-radius: 4px; font-weight: bold; flex: 1; cursor: pointer; font-size: 0.85rem; }
+        .btn-delete { background: #aa0000; color: white; border: none; padding: 8px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.85rem; }
     </style>
 </head>
 <body>
@@ -29,38 +24,46 @@
     <nav>
         <div class="logo-container">
             <img src="/logo.jpg" alt="Logo" class="logo">
-            <h2 style="margin:0; color: #ff3300;">Nova Shop</h2>
+            <h2>Nova Shop</h2>
         </div>
         <div class="nav-links" id="navLinks">
             <a href="/">Home</a>
             <a href="/products.html">Prodotti</a>
-            <a href="/cart.html">Carrello & Ordini</a>
-            <span id="authArea"><a href="/auth/discord" class="btn-discord">Accedi con Discord</a></span>
+            <a href="/cart.html">Carrello</a>
+            <span id="authArea"><a href="/auth/discord" class="btn-discord">Accedi</a></span>
         </div>
     </nav>
+
     <div class="container">
-        <h1>🛠️ Pannello Admin Riservato 🛠️</h1>
-        <div class="admin-panel">
-            <form id="adminForm">
+        <h1>🛠️ Pannello Gestione Admin 🛠️</h1>
+        
+        <div class="admin-box">
+            <h3 style="margin-top:0; color:#ff5533;">➕ Aggiungi Nuovo Prodotto</h3>
+            <form id="addProductForm">
                 <input type="text" name="name" placeholder="Nome Prodotto" required>
                 <input type="text" name="variant" placeholder="Variante (es. 30 Giorni / Lifetime)">
                 <input type="number" step="0.01" name="price" placeholder="Prezzo (€)" required>
-                <input type="number" name="stock" placeholder="Stock Disponibile" required>
-                <input type="text" name="image" placeholder="URL Immagine Prodotto" required>
+                <input type="number" name="stock" placeholder="Stock Iniziale (Se >= 1 invia Restock su Discord)" required>
+                <input type="text" name="image" placeholder="URL Immagine" required>
                 <textarea name="description" placeholder="Descrizione"></textarea>
-                <button type="submit">Aggiungi Prodotto & Invia Notifica Restock su Discord</button>
+                <button type="submit" class="btn-submit">Crea Prodotto & Notifica</button>
             </form>
         </div>
+
+        <h2 style="color:#ff5533; font-size:1.4rem;">📦 Modifica / Gestisci Stock Esistenti</h2>
+        <div id="manageProductsGrid" class="product-manage-grid">
+            <p style="text-align:center; width:100%;">Caricamento prodotti...</p>
+        </div>
     </div>
+
     <script>
         fetch('/api/me').then(res => res.json()).then(({ user, isAdmin }) => {
             if (!user || !isAdmin) {
-                alert('Accesso negato. Questa pagina è riservata ai fondatori.');
+                alert('Accesso negato.');
                 window.location.href = '/';
                 return;
             }
-            const authArea = document.getElementById('authArea');
-            authArea.innerHTML = `
+            document.getElementById('authArea').innerHTML = `
                 <div class="user-profile">
                     <img src="https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png" alt="Avatar">
                     <span>${user.username}</span>
@@ -70,11 +73,12 @@
             const links = document.getElementById('navLinks');
             const adminLink = document.createElement('a');
             adminLink.href = '/admin.html';
-            adminLink.textContent = 'Pannello Admin';
-            links.insertBefore(adminLink, authArea);
+            adminLink.textContent = 'Admin';
+            links.insertBefore(adminLink, document.getElementById('authArea'));
         });
 
-        document.getElementById('adminForm').addEventListener('submit', async (e) => {
+        // Aggiungi Prodotto
+        document.getElementById('addProductForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const body = Object.fromEntries(new FormData(e.target).entries());
             const res = await fetch('/api/admin/product', {
@@ -84,12 +88,78 @@
             });
             const data = await res.json();
             if(data.success) {
-                alert('Prodotto aggiunto con successo e notifica inviata su Discord!');
-                window.location.href = '/products.html';
+                alert('Prodotto aggiunto con successo!');
+                location.reload();
             } else {
                 alert('Errore: ' + data.error);
             }
         });
+
+        // Carica prodotti per la gestione
+        async function loadManageProducts() {
+            const res = await fetch('/api/products');
+            const products = await res.json();
+            const grid = document.getElementById('manageProductsGrid');
+
+            if (products.length === 0) {
+                grid.innerHTML = '<p style="text-align:center; width:100%;">Nessun prodotto trovato.</p>';
+                return;
+            }
+
+            grid.innerHTML = products.map(p => `
+                <div class="manage-card">
+                    <form onsubmit="updateProduct(event, ${p.id})">
+                        <label style="font-size:0.8rem; color:#aaa;">Nome:</label>
+                        <input type="text" name="name" value="${p.name}" required>
+                        <label style="font-size:0.8rem; color:#aaa;">Variante:</label>
+                        <input type="text" name="variant" value="${p.variant || ''}">
+                        <label style="font-size:0.8rem; color:#aaa;">Prezzo (€):</label>
+                        <input type="number" step="0.01" name="price" value="${p.price}" required>
+                        <label style="font-size:0.8rem; color:#aaa;">Stock (Se >= 1 attiva Restock Discord):</label>
+                        <input type="number" name="stock" value="${p.stock}" required>
+                        <input type="hidden" name="image" value="${p.image}">
+                        <input type="hidden" name="description" value="${p.description || ''}">
+                        <div class="btn-group">
+                            <button type="submit" class="btn-update">Salva & Stock</button>
+                            <button type="button" class="btn-delete" onclick="deleteProduct(${p.id})">Elimina</button>
+                        </div>
+                    </form>
+                </div>
+            `).join('');
+        }
+
+        async function updateProduct(e, id) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const body = Object.fromEntries(formData.entries());
+
+            const res = await fetch(`/api/admin/product/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert('Prodotto aggiornato! Notifica restock inviata se stock >= 1.');
+                loadManageProducts();
+            } else {
+                alert('Errore: ' + data.error);
+            }
+        }
+
+        async function deleteProduct(id) {
+            if (!confirm('Sei sicuro di voler eliminare questo prodotto?')) return;
+            const res = await fetch(`/api/admin/product/${id}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (data.success) {
+                alert('Prodotto eliminato.');
+                loadManageProducts();
+            } else {
+                alert('Errore eliminazione.');
+            }
+        }
+
+        loadManageProducts();
     </script>
 </body>
 </html>
