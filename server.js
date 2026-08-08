@@ -41,6 +41,11 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
+// Endpoint invisibile per UptimeRobot (Ping Server)
+app.get('/ping', (req, res) => {
+    res.status(200).send('OK');
+});
+
 // OAuth Discord
 app.get('/auth/discord', passport.authenticate('discord'));
 app.get('/auth/discord/callback', passport.authenticate('discord', { failureRedirect: '/' }), (req, res) => res.redirect('/'));
@@ -107,32 +112,80 @@ app.post('/api/checkout', async (req, res) => {
     res.json({ success: true, message: 'Ordine creato!' });
 });
 
-// Admin: Aggiungi Prodotto & Restock Discord
+// Admin: Aggiungi Prodotto
 app.post('/api/admin/product', async (req, res) => {
     if (!req.isAuthenticated() || !ADMIN_IDS.includes(req.user.id)) {
         return res.status(403).json({ error: 'Accesso negato.' });
     }
 
     const { name, variant, price, stock, description, image } = req.body;
+    const parsedStock = parseInt(stock);
+
     const { data, error } = await supabase.from('products').insert([
-        { name, variant, price, stock, description, image }
+        { name, variant, price, stock: parsedStock, description, image }
     ]).select();
 
     if (error) return res.status(500).json({ error: error.message });
 
-    try {
-        const stockChannel = await client.channels.fetch(process.env.CHANNEL_STOCK_ID);
-        if (stockChannel) {
-            stockChannel.send(`🔥 **NUOVO PRODOTTO / RESTOCK SU NOVA SHOP!** 🔥\n\n📦 **${name}** ${variant ? '('+variant+')' : ''}\n💰 Prezzo: **€${price}**\n🔢 Stock: **${stock}** pezzi\n🔗 Corri sul sito a comprarlo!`);
+    if (parsedStock >= 1) {
+        try {
+            const stockChannel = await client.channels.fetch(process.env.CHANNEL_STOCK_ID);
+            if (stockChannel) {
+                stockChannel.send(`⚡ **NUOVO PRODOTTO DISPONIBILE SU NOVA SHOP!** ⚡\n\n📦 **${name}** ${variant ? '('+variant+')' : ''}\n💰 Prezzo: **€${price}**\n🔢 Stock: **${parsedStock}** pezzi\n🔗 Corri sul sito a comprarlo!`);
+            }
+        } catch (err) {
+            console.error("Errore invio canale stock:", err);
         }
-    } catch (err) {
-        console.error("Errore invio canale stock:", err);
     }
 
     res.json({ success: true, product: data[0] });
 });
 
-// Rotte Pagine HTML Separate (dalla cartella public)
+// Admin: Modifica Prodotto / Aggiorna Stock
+app.put('/api/admin/product/:id', async (req, res) => {
+    if (!req.isAuthenticated() || !ADMIN_IDS.includes(req.user.id)) {
+        return res.status(403).json({ error: 'Accesso negato.' });
+    }
+
+    const productId = req.params.id;
+    const { name, variant, price, stock, description, image } = req.body;
+    const newStock = parseInt(stock);
+
+    const { data: oldProd } = await supabase.from('products').select('stock, name, variant').eq('id', productId).single();
+
+    const { data, error } = await supabase.from('products').update({
+        name, variant, price, stock: newStock, description, image
+    }).eq('id', productId).select();
+
+    if (error) return res.status(500).json({ error: error.message });
+
+    if (newStock >= 1 && (!oldProd || oldProd.stock < newStock)) {
+        try {
+            const stockChannel = await client.channels.fetch(process.env.CHANNEL_STOCK_ID);
+            if (stockChannel) {
+                stockChannel.send(`🔥 **RESTOCK AGGIORNATO SU NOVA SHOP!** 🔥\n\n📦 **${name}** ${variant ? '('+variant+')' : ''}\n🔢 Nuovo Stock: **${newStock}** pezzi\n💰 Prezzo: **€${price}**\n🔗 Corri sul sito prima che finisca!`);
+            }
+        } catch (err) {
+            console.error("Errore invio canale restock:", err);
+        }
+    }
+
+    res.json({ success: true, product: data[0] });
+});
+
+// Admin: Elimina Prodotto
+app.delete('/api/admin/product/:id', async (req, res) => {
+    if (!req.isAuthenticated() || !ADMIN_IDS.includes(req.user.id)) {
+        return res.status(403).json({ error: 'Accesso negato.' });
+    }
+
+    const { error } = await supabase.from('products').delete().eq('id', req.params.id);
+    if (error) return res.status(500).json({ error: error.message });
+
+    res.json({ success: true });
+});
+
+// Rotte Pagine HTML
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 app.get('/products.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'products.html')));
 app.get('/cart.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'cart.html')));
@@ -165,7 +218,7 @@ client.on('interactionCreate', async interaction => {
                 const embed = new EmbedBuilder()
                     .setTitle(`✅ Ordine #${orderId} Completato`)
                     .setDescription(`L'ordine è stato completato con successo da ${interaction.user.tag}.`)
-                    .setColor(0x00FF00)
+                    .setColor(0xFF2A00)
                     .setTimestamp();
                 await completedChannel.send({ embeds: [embed] });
             }
