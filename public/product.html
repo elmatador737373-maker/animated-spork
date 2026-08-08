@@ -3,295 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dettagli Prodotto - Nova Shop</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Nova Shop - Prodotti</title>
     <style>
-        body {
-            background-color: #010103;
-            overflow-x: hidden;
-        }
-
-        #lightning-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 0;
-            opacity: 0.9;
-        }
-
-        .glow-sphere {
-            position: fixed;
-            width: 650px;
-            height: 650px;
-            background: radial-gradient(circle, rgba(255, 34, 0, 0.25) 0%, transparent 70%);
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 0;
-            filter: blur(90px);
-        }
-
-        .neon-fire {
-            text-shadow: 0 0 15px rgba(255, 34, 0, 0.95), 0 0 30px rgba(255, 51, 51, 0.7), 0 0 60px rgba(255, 0, 0, 0.5);
-        }
-
-        .laser-top {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background: linear-gradient(90deg, transparent, #ff2200, #ff7700, #ff2200, transparent);
-            z-index: 100;
-            box-shadow: 0 0 25px #ff2200;
-        }
+        body, html { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background-color: #030000; color: white; overflow-x: hidden; }
+        .lightning-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: radial-gradient(circle, rgba(180,0,0,0.2) 0%, rgba(3,0,0,1) 90%); z-index: -1; animation: flash 4s infinite; }
+        @keyframes flash { 0%, 90%, 96%, 100% { opacity: 0.7; } 92%, 94% { opacity: 1; background: radial-gradient(circle, rgba(255,40,0,0.5) 0%, rgba(30,0,0,1) 90%); } }
+        nav { display: flex; justify-content: space-between; align-items: center; padding: 15px 40px; background: rgba(10,0,0,0.95); border-bottom: 2px solid #ff2a00; }
+        .logo-container { display: flex; align-items: center; gap: 15px; }
+        .logo { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #ff2a00; object-fit: cover; }
+        .nav-links { display: flex; gap: 20px; align-items: center; }
+        .nav-links a { color: white; text-decoration: none; font-weight: bold; }
+        .btn-discord { background: #5865F2; padding: 8px 16px; border-radius: 6px; display: flex; align-items: center; gap: 8px; }
+        .btn-logout { background: #ff2a00; padding: 6px 12px; border-radius: 5px; font-size: 0.9rem; }
+        .user-profile { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); padding: 5px 15px; border-radius: 20px; border: 1px solid #441111; }
+        .user-profile img { width: 32px; height: 32px; border-radius: 50%; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+        h1 { text-align: center; color: #ff3300; text-shadow: 0 0 10px rgba(255,50,0,0.5); }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-top: 30px; }
+        .card { background: rgba(20, 0, 0, 0.8); border: 1px solid #ff2a00; border-radius: 10px; padding: 20px; text-align: center; box-shadow: 0 0 15px rgba(255,0,0,0.15); }
+        .card img { width: 100%; height: 180px; object-fit: cover; border-radius: 6px; border: 1px solid #440000; }
+        .btn-buy { background: #ff2a00; color: white; border: none; width: 100%; padding: 10px; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 15px; transition: 0.2s; }
+        .btn-buy:hover { background: #cc2200; box-shadow: 0 0 10px #ff2a00; }
     </style>
 </head>
-<body class="text-slate-100 min-h-screen flex flex-col justify-between font-sans selection:bg-red-600 selection:text-white relative">
-
-    <div class="laser-top"></div>
-    <canvas id="lightning-canvas"></canvas>
-
-    <div class="glow-sphere" style="top: -180px; left: -180px;"></div>
-    <div class="glow-sphere" style="bottom: -180px; right: -180px;"></div>
-
-    <!-- NAVBAR -->
-    <header class="bg-slate-950/85 backdrop-blur-xl border-b border-red-950/40 sticky top-0 z-50 py-3.5 px-4 sm:px-8 flex justify-between items-center shadow-2xl">
-        <a href="/" class="flex items-center gap-3 group z-10">
-            <div class="w-11 h-11 rounded-xl overflow-hidden border-2 border-[#ff2200]/60 shadow-lg shadow-[#ff2200]/40 bg-slate-900 flex items-center justify-center">
-                <img src="/logo.jpg" alt="Logo" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fa-solid fa-bolt-lightning text-[#ff2200] text-xl\'></i>';">
-            </div>
-            <span class="text-lg sm:text-xl font-black tracking-wider text-white">
-                NOVA<span class="text-[#ff2200] neon-fire">SHOP</span>
-            </span>
-        </a>
-
-        <div id="auth-container" class="z-10">
-            <a href="/auth/discord" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition shadow-lg shadow-indigo-600/30 flex items-center gap-2 border border-indigo-500/30">
-                <i class="fa-brands fa-discord text-base"></i> <span class="hidden xs:inline">Login con Discord</span>
-            </a>
+<body>
+    <div class="lightning-bg"></div>
+    <nav>
+        <div class="logo-container">
+            <img src="/logo.jpg" alt="Logo" class="logo">
+            <h2 style="margin:0; color: #ff3300;">Nova Shop</h2>
         </div>
-    </header>
-
-    <!-- MAIN CONTENT -->
-    <main class="flex-grow container mx-auto px-4 py-8 sm:py-12 max-w-4xl relative z-10">
-        <a href="/" class="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-400 hover:text-[#ff2200] mb-6 transition">
-            <i class="fa-solid fa-arrow-left"></i> Torna al catalogo
-        </a>
-
-        <div id="loading" class="text-center py-20 text-slate-500">
-            <i class="fa-solid fa-bolt fa-spin text-3xl mb-3 text-[#ff2200]"></i>
-            <p class="text-xs sm:text-sm">Caricamento dettagli prodotto...</p>
+        <div class="nav-links" id="navLinks">
+            <a href="/">Home</a>
+            <a href="/products.html">Prodotti</a>
+            <a href="/cart.html">Carrello & Ordini</a>
+            <span id="authArea"><a href="/auth/discord" class="btn-discord">Accedi con Discord</a></span>
         </div>
-
-        <div id="product-detail" class="hidden grid grid-cols-1 md:grid-cols-2 gap-8 bg-slate-900/60 backdrop-blur-xl border border-slate-800/90 rounded-3xl p-6 sm:p-8 shadow-2xl">
-            <!-- Immagine Prodotto -->
-            <div class="rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 h-64 sm:h-80 relative flex items-center justify-center">
-                <img id="p-image" src="" alt="Prodotto" class="w-full h-full object-cover">
-                <div id="p-badge" class="absolute top-4 right-4 bg-slate-950/90 backdrop-blur-md text-emerald-400 text-xs font-black px-3.5 py-1.5 rounded-xl border border-emerald-500/30 shadow-lg">
-                    €0.00
-                </div>
-            </div>
-
-            <!-- Info e Acquisto -->
-            <div class="flex flex-col justify-between">
-                <div>
-                    <span id="p-variant" class="text-[10px] font-extrabold text-[#ff2200] uppercase tracking-widest bg-red-500/10 px-2.5 py-1 rounded border border-red-500/20">Standard</span>
-                    <h1 id="p-name" class="text-2xl sm:text-3xl font-black text-white mt-3 mb-2 leading-tight">Nome Prodotto</h1>
-                    <p id="p-desc" class="text-slate-400 text-xs sm:text-sm leading-relaxed mb-6">Descrizione del prodotto...</p>
-                    <div class="text-xs text-slate-400 mb-6 flex items-center gap-2">
-                        <i class="fa-solid fa-box text-[#ff2200]"></i> Stock disponibile: <span id="p-stock" class="font-bold text-white">0</span>
-                    </div>
-                </div>
-
-                <!-- Azione / Pulsante Acquista -->
-                <div id="buy-section">
-                    <!-- Iniettato via JS -->
-                </div>
-            </div>
+    </nav>
+    <div class="container">
+        <h1>⚡ Tutti i Prodotti Disponibili ⚡</h1>
+        <div id="productGrid" class="grid">
+            <p style="text-align:center; width:100%;">Caricamento prodotti...</p>
         </div>
-    </main>
-
-    <!-- FOOTER -->
-    <footer class="bg-slate-950/80 border-t border-red-950/30 py-6 text-center text-xs text-slate-600 relative z-10">
-        <p>&copy; 2026 Nova Shop &bull; Secure Discord Integration</p>
-    </footer>
-
-    <!-- SCRIPT FULMINI E LOGICA PRODOTTO -->
+    </div>
     <script>
-        const canvas = document.getElementById('lightning-canvas');
-        const ctx = canvas.getContext('2d');
-        let width, height;
-
-        function resize() {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resize);
-        resize();
-
-        class ElectricBolt {
-            constructor() {
-                this.reset();
-            }
-            reset() {
-                this.x = Math.random() * width;
-                this.y = 0;
-                this.path = [{x: this.x, y: this.y}];
-                this.segments = Math.floor(Math.random() * 12) + 8;
-                this.alpha = 1.0;
-                this.dead = false;
-
-                let cx = this.x;
-                let cy = 0;
-                for(let i=0; i<this.segments; i++) {
-                    cx += (Math.random() - 0.5) * 140;
-                    cy += height / this.segments;
-                    this.path.push({x: cx, y: cy});
+        fetch('/api/me').then(res => res.json()).then(({ user, isAdmin }) => {
+            if (user) {
+                const authArea = document.getElementById('authArea');
+                authArea.innerHTML = `
+                    <div class="user-profile">
+                        <img src="https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png" alt="Avatar">
+                        <span>${user.username}</span>
+                    </div>
+                    <a href="/logout" class="btn-logout">Esci</a>
+                `;
+                if (isAdmin) {
+                    const links = document.getElementById('navLinks');
+                    const adminLink = document.createElement('a');
+                    adminLink.href = '/admin.html';
+                    adminLink.textContent = 'Pannello Admin';
+                    links.insertBefore(adminLink, authArea);
                 }
             }
-            draw() {
-                ctx.beginPath();
-                ctx.moveTo(this.path[0].x, this.path[0].y);
-                for(let p of this.path) {
-                    ctx.lineTo(p.x, p.y);
-                }
-                ctx.strokeStyle = `rgba(255, 34, 0, ${this.alpha})`;
-                ctx.lineWidth = 3;
-                ctx.shadowBlur = 30;
-                ctx.shadowColor = '#ff2200';
-                ctx.stroke();
+        });
 
-                ctx.strokeStyle = `rgba(255, 255, 255, ${this.alpha * 0.9})`;
-                ctx.lineWidth = 1;
-                ctx.stroke();
-                
-                this.alpha -= 0.1;
-                if(this.alpha <= 0) this.dead = true;
-            }
-        }
-
-        let bolts = [];
-        function animate() {
-            ctx.clearRect(0, 0, width, height);
-            if(Math.random() < 0.15 && bolts.length < 5) {
-                bolts.push(new ElectricBolt());
-            }
-            for(let i = bolts.length - 1; i >= 0; i--) {
-                bolts[i].draw();
-                if(bolts[i].dead) bolts.splice(i, 1);
-            }
-            requestAnimationFrame(animate);
-        }
-        animate();
-
-        async function loadProductPage() {
-            let isLogged = false;
-            try {
-                const authRes = await fetch('/api/auth/me');
-                const authData = await authRes.json();
-                const authContainer = document.getElementById('auth-container');
-
-                if (authData.loggedIn) {
-                    isLogged = true;
-                    const user = authData.user;
-                    authContainer.innerHTML = `
-                        <div class="flex items-center gap-2.5 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl shadow-lg">
-                            <img src="${user.avatar}" alt="Avatar" class="w-7 h-7 rounded-full border border-red-500/50">
-                            <span class="text-xs sm:text-sm font-bold text-slate-200 max-w-[100px] sm:max-w-[140px] truncate">${user.global_name}</span>
-                            <a href="/auth/logout" class="text-slate-400 hover:text-red-400 text-xs ml-1 transition" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></a>
-                        </div>
-                    `;
-                }
-            } catch (err) {
-                console.error("Auth error:", err);
-            }
-
-            const urlParams = new URLSearchParams(window.location.search);
-            const productId = urlParams.get('id');
-
-            if (!productId) {
-                document.getElementById('loading').innerHTML = '<p class="text-red-500">Prodotto non specificato.</p>';
-                return;
-            }
-
-            try {
-                const res = await fetch('/api/products');
-                const products = await res.json();
-                const product = products.find(p => p.id == productId);
-
-                document.getElementById('loading').style.display = 'none';
-
-                if (!product) {
-                    document.getElementById('loading').innerHTML = '<p class="text-red-500">Prodotto non trovato.</p>';
-                    return;
-                }
-
-                document.getElementById('product-detail').classList.remove('hidden');
-                document.getElementById('p-image').src = product.image || 'https://via.placeholder.com/400x300?text=Nova+Shop';
-                document.getElementById('p-badge').textContent = `€${Number(product.price).toFixed(2)}`;
-                document.getElementById('p-variant').textContent = product.variant || 'Standard';
-                document.getElementById('p-name').textContent = product.name;
-                document.getElementById('p-desc').textContent = product.description || 'Nessuna descrizione specificata.';
-                document.getElementById('p-stock').textContent = product.stock;
-
-                const buySection = document.getElementById('buy-section');
-
-                if (product.stock <= 0) {
-                    buySection.innerHTML = `
-                        <button disabled class="w-full bg-slate-800 text-slate-500 font-bold py-3 px-4 rounded-xl cursor-not-allowed text-sm">
-                            Prodotto Esaurito (Out of Stock)
+        fetch('/api/products').then(res => res.json()).then(products => {
+            const grid = document.getElementById('productGrid');
+            if(products.length === 0) {
+                grid.innerHTML = '<p style="text-align:center; width:100%;">Nessun prodotto disponibile.</p>';
+            } else {
+                grid.innerHTML = products.map(p => `
+                    <div class="card">
+                        <img src="${p.image}" alt="${p.name}">
+                        <h3>${p.name} ${p.variant ? '('+p.variant+')' : ''}</h3>
+                        <p style="color: #ccc; font-size: 0.9rem;">${p.description || ''}</p>
+                        <p><strong>Stock:</strong> ${p.stock > 0 ? p.stock + ' disponibili' : 'Esaurito'}</p>
+                        <p style="font-size: 1.2rem; color: #ff4400;"><strong>€${p.price}</strong></p>
+                        <button class="btn-buy" onclick="buy(${p.id}, '${p.name}', ${p.price})" ${p.stock <= 0 ? 'disabled style="background:#444;cursor:not-allowed;"' : ''}>
+                            ${p.stock > 0 ? 'Acquista Ora' : 'Esaurito'}
                         </button>
-                    `;
-                } else if (!isLogged) {
-                    buySection.innerHTML = `
-                        <a href="/auth/discord" class="block text-center w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-lg shadow-indigo-600/30 text-sm flex items-center justify-center gap-2">
-                            <i class="fa-brands fa-discord"></i> Effettua il Login per Acquistare
-                        </a>
-                    `;
-                } else {
-                    buySection.innerHTML = `
-                        <button onclick="buyProduct(${product.id})" class="w-full bg-gradient-to-r from-[#ff2200] via-rose-600 to-red-700 hover:from-red-600 hover:to-rose-500 text-white font-bold py-3.5 px-4 rounded-xl transition shadow-xl shadow-red-600/30 text-sm flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-bag-shopping"></i> Conferma e Acquista Ora
-                        </button>
-                    `;
-                }
+                    </div>
+                `).join('');
+            }
+        });
 
-            } catch (err) {
-                console.error(err);
-                document.getElementById('loading').innerHTML = '<p class="text-red-500">Errore nel caricamento del prodotto.</p>';
+        async function buy(productId, productName, price) {
+            const res = await fetch('/api/checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productId, productName, price })
+            });
+            const data = await res.json();
+            if(data.success) {
+                alert('Ordine effettuato! L\'ordine è in attesa di pagamento. Apri subito un ticket nel server Discord: https://discord.gg/ACX7HmxHnQ');
+                window.location.href = 'https://discord.gg/ACX7HmxHnQ';
+            } else {
+                alert('Errore: ' + (data.error || 'Devi fare il login!'));
+                if(res.status === 401) window.location.href = '/auth/discord';
             }
         }
-
-        async function buyProduct(productId) {
-            if (!confirm("Confermi l'acquisto di questo prodotto?")) return;
-
-            try {
-                const res = await fetch('/api/buy', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ productId })
-                });
-                const data = await res.json();
-
-                if (res.ok) {
-                    alert("Acquisto completato con successo!");
-                    window.location.href = '/';
-                } else {
-                    alert("Errore durante l'acquisto: " + (data.error || 'Riprova più tardi.'));
-                }
-            } catch (err) {
-                console.error(err);
-                alert("Errore di connessione.");
-            }
-        }
-
-        loadProductPage();
     </script>
 </body>
 </html>
