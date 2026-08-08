@@ -9,86 +9,110 @@
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Sfondo profondo con bagliori rossi coordinati al logo */
+        /* Sfondo profondo in stile dark mode avanzato */
         body {
-            background-color: #020204;
-            background-image: 
-                radial-gradient(circle at 20% 10%, rgba(220, 38, 38, 0.25) 0%, transparent 40%),
-                radial-gradient(circle at 80% 90%, rgba(185, 28, 28, 0.18) 0%, transparent 40%),
-                linear-gradient(to right, rgba(220, 38, 38, 0.02) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(220, 38, 38, 0.02) 1px, transparent 1px);
-            background-size: 100% 100%, 100% 100%, 30px 30px, 30px 30px;
-            background-attachment: fixed;
+            background-color: #010103;
+            overflow-x: hidden;
         }
 
-        .neon-glow {
-            text-shadow: 0 0 25px rgba(239, 68, 68, 0.7), 0 0 50px rgba(220, 38, 38, 0.4);
-        }
-
-        .card-glow {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .card-glow:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 35px -10px rgba(239, 68, 68, 0.3);
-            border-color: rgba(239, 68, 68, 0.6);
-        }
-
-        .laser-line {
+        /* Canvas per i fulmini animati */
+        #lightning-canvas {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, rgba(239, 68, 68, 0.9), transparent);
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.45;
+        }
+
+        /* Bagliori rossi dinamici */
+        .glow-sphere {
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(220, 38, 38, 0.2) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            filter: blur(60px);
+        }
+
+        .neon-text-red {
+            text-shadow: 0 0 10px rgba(239, 68, 68, 0.8), 0 0 20px rgba(220, 38, 38, 0.5), 0 0 40px rgba(220, 38, 38, 0.3);
+        }
+
+        .card-glow {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            z-index: 10;
+        }
+        .card-glow:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px -5px rgba(239, 68, 68, 0.3);
+            border-color: rgba(239, 68, 68, 0.6);
+        }
+
+        /* Linea laser superiore */
+        .laser-top {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #ef4444, #ff0055, #ef4444, transparent);
             z-index: 100;
+            box-shadow: 0 0 15px #ef4444;
         }
     </style>
 </head>
-<body class="text-slate-100 min-h-screen flex flex-col justify-between font-sans selection:bg-red-600 selection:text-white">
+<body class="text-slate-100 min-h-screen flex flex-col justify-between font-sans selection:bg-red-600 selection:text-white relative">
 
-    <div class="laser-line"></div>
+    <div class="laser-top"></div>
+    <canvas id="lightning-canvas"></canvas>
+    
+    <div class="glow-sphere" style="top: -100px; left: -100px;"></div>
+    <div class="glow-sphere" style="bottom: -100px; right: -100px;"></div>
 
-    <!-- NAVBAR CON IL TUO LOGO UFFICIALE -->
-    <header class="bg-slate-950/90 backdrop-blur-xl border-b border-red-950/50 sticky top-0 z-50 py-3 px-4 sm:px-8 flex justify-between items-center shadow-xl">
-        <a href="/" class="flex items-center gap-3 group">
-            <!-- Qui inseriamo il tuo logo reale -->
-            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl overflow-hidden border border-red-500/40 shadow-lg shadow-red-600/30 group-hover:border-red-500 transition">
-                <img src="/logo.png" alt="Nova Shop Logo" class="w-full h-full object-cover">
+    <!-- NAVBAR -->
+    <header class="bg-slate-950/80 backdrop-blur-xl border-b border-red-950/40 sticky top-0 z-50 py-3.5 px-4 sm:px-8 flex justify-between items-center shadow-2xl">
+        <a href="/" class="flex items-center gap-3 group z-10">
+            <div class="w-11 h-11 rounded-xl overflow-hidden border-2 border-red-500/50 shadow-lg shadow-red-600/40 bg-slate-900 flex items-center justify-center">
+                <img src="/logo.png" alt="Logo" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fa-solid fa-bolt-lightning text-red-500 text-xl\'></i>';">
             </div>
             <span class="text-lg sm:text-xl font-black tracking-wider text-white">
-                NOVA<span class="text-red-500 neon-glow">SHOP</span>
+                NOVA<span class="text-red-500 neon-text-red">SHOP</span>
             </span>
         </a>
 
-        <!-- Auth Area -->
-        <div id="auth-container">
-            <a href="/auth/discord" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition shadow-lg shadow-indigo-600/25 flex items-center gap-2">
+        <div id="auth-container" class="z-10">
+            <a href="/auth/discord" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition shadow-lg shadow-indigo-600/30 flex items-center gap-2 border border-indigo-500/30">
                 <i class="fa-brands fa-discord text-base"></i> <span class="hidden xs:inline">Login con Discord</span>
             </a>
         </div>
     </header>
 
-    <!-- HERO SECTION CON ANTEPRIMA DEL LOGO O BANNER -->
-    <section class="container mx-auto px-4 pt-10 pb-6 text-center max-w-3xl relative">
+    <!-- HERO SECTION -->
+    <section class="container mx-auto px-4 pt-12 pb-8 text-center max-w-3xl relative z-10">
         <div class="mb-6 flex justify-center">
-            <div class="w-28 h-28 sm:w-36 sm:h-36 rounded-2xl overflow-hidden border-2 border-red-500/50 shadow-2xl shadow-red-600/40 p-1 bg-slate-900">
-                <img src="/logo.png" alt="Logo Ufficiale" class="w-full h-full object-cover rounded-xl">
+            <div class="w-32 h-32 sm:w-40 sm:h-40 rounded-2xl overflow-hidden border-2 border-red-500/60 shadow-2xl shadow-red-600/50 p-1.5 bg-slate-900/90 backdrop-blur-md">
+                <img src="/logo.png" alt="Logo Ufficiale" class="w-full h-full object-cover rounded-xl" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-red-950/35 text-red-500 text-4xl\'><i class=\'fa-solid fa-bolt-lightning\'></i></div>';">
             </div>
         </div>
-        <h1 class="text-3xl sm:text-5xl font-black tracking-tight mb-3 text-white leading-tight">
-            Benvenuto su <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-rose-400 to-orange-500 neon-glow">Nova Shop</span>
+        <h1 class="text-3xl sm:text-5xl font-black tracking-tight mb-4 text-white">
+            STORE UFFICIALE DI <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-rose-500 to-orange-500 neon-text-red">NOVA SHOP</span>
         </h1>
-        <p class="text-slate-400 text-xs sm:text-sm md:text-base max-w-xl mx-auto leading-relaxed">
-            Store ufficiale di servizi digitali. Effettua l'accesso con Discord per visualizzare il catalogo e acquistare in modo istantaneo.
+        <p class="text-slate-400 text-xs sm:text-sm md:text-base max-w-lg mx-auto">
+            Servizi digitali istantanei protetti e garantiti. Effettua l'accesso con Discord per sbloccare l'acquisto immediato.
         </p>
     </section>
 
     <!-- MAIN PRODUCT GRID -->
-    <main class="flex-grow container mx-auto px-4 py-4 max-w-6xl">
+    <main class="flex-grow container mx-auto px-4 py-6 max-w-6xl relative z-10">
         <div class="flex items-center justify-between mb-6 border-b border-slate-900 pb-3">
             <h2 class="text-sm sm:text-base font-bold flex items-center gap-2 text-slate-200 uppercase tracking-wider">
-                <i class="fa-solid fa-store text-red-500"></i> Prodotti Disponibili
+                <i class="fa-solid fa-store text-red-500"></i> Catalogo Prodotti
             </h2>
             <span id="product-count" class="text-xs text-slate-500 font-semibold">Sincronizzazione...</span>
         </div>
@@ -98,19 +122,85 @@
             <p class="text-xs sm:text-sm">Caricamento prodotti dal magazzino...</p>
         </div>
 
-        <!-- Griglia Prodotti -->
-        <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             <!-- Dinamico via JS -->
         </div>
     </main>
 
     <!-- FOOTER -->
-    <footer class="bg-slate-950/90 border-t border-red-950/30 py-6 text-center text-xs text-slate-600">
-        <p>&copy; 2026 Nova Shop &bull; Tutti i diritti riservati</p>
+    <footer class="bg-slate-950/80 border-t border-red-950/30 py-6 text-center text-xs text-slate-600 relative z-10">
+        <p>&copy; 2026 Nova Shop &bull; Secure Discord Integration</p>
     </footer>
 
-    <!-- SCRIPT -->
+    <!-- SCRIPT FULMINI ANIMATI + CARICAMENTO DATI -->
     <script>
+        // Animazione fulmini rossi di sfondo
+        const canvas = document.getElementById('lightning-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Bolt {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * width;
+                this.y = 0;
+                this.path = [{x: this.x, y: this.y}];
+                this.length = Math.floor(Math.random() * 8) + 5;
+                this.maxAlpha = Math.random() * 0.7 + 0.3;
+                this.alpha = this.maxAlpha;
+                this.dead = false;
+
+                let currentX = this.x;
+                let currentY = 0;
+                for(let i=0; i<this.length; i++) {
+                    currentX += (Math.random() - 0.5) * 80;
+                    currentY += Math.random() * (height / this.length);
+                    this.path.push({x: currentX, y: currentY});
+                }
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.moveTo(this.path[0].x, this.path[0].y);
+                for(let p of this.path) {
+                    ctx.lineTo(p.x, p.y);
+                }
+                ctx.strokeStyle = `rgba(239, 68, 68, ${this.alpha})`;
+                ctx.lineWidth = 2;
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = '#ef4444';
+                ctx.stroke();
+                
+                this.alpha -= 0.08;
+                if(this.alpha <= 0) this.dead = true;
+            }
+        }
+
+        let bolts = [];
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            
+            if(Math.random() < 0.08 && bolts.length < 3) {
+                bolts.push(new Bolt());
+            }
+
+            for(let i = bolts.length - 1; i >= 0; i--) {
+                bolts[i].draw();
+                if(bolts[i].dead) bolts.splice(i, 1);
+            }
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // Caricamento Dati Utente e Prodotti
         async function loadStore() {
             try {
                 const authRes = await fetch('/api/auth/me');
@@ -153,13 +243,13 @@
                 }
 
                 grid.innerHTML = products.map(p => `
-                    <div class="bg-slate-900/50 backdrop-blur-xl border border-slate-800/90 rounded-2xl overflow-hidden card-glow flex flex-col justify-between">
+                    <div class="bg-slate-900/60 backdrop-blur-xl border border-slate-800/80 rounded-2xl overflow-hidden card-glow flex flex-col justify-between shadow-xl">
                         <div>
                             <div class="h-44 sm:h-48 bg-slate-950 overflow-hidden relative border-b border-slate-800/80">
                                 <img src="${p.image || 'https://via.placeholder.com/400x300?text=Nova+Shop'}" alt="${p.name}" class="w-full h-full object-cover">
                                 <div class="absolute top-3 right-3 bg-slate-950/90 backdrop-blur-md text-emerald-400 text-xs font-black px-3 py-1 rounded-xl border border-emerald-500/30 shadow-lg">
                                     €${Number(p.price).toFixed(2)}
-                                </div>
+                               </div>
                                 <div class="absolute bottom-3 left-3 bg-slate-950/90 backdrop-blur-md text-slate-300 text-[10px] font-bold px-2.5 py-1 rounded-lg border border-slate-800">
                                     Stock: ${p.stock}
                                 </div>
