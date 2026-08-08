@@ -73,8 +73,6 @@ app.get('/api/orders', async (req, res) => {
     res.json(data);
 });
 
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-
 // Checkout e Notifica Discord Ordini
 app.post('/api/checkout', async (req, res) => {
     if (!req.isAuthenticated()) return res.status(401).json({ error: 'Devi effettuare il login con Discord!' });
