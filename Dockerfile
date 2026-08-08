@@ -1,24 +1,20 @@
-FROM ubuntu:latest
+# 1. Usiamo una versione stabile di Node.js (Alpine è più leggera)
+FROM node:18-alpine
 
-# Evita prompt interattivi durante l'installazione
-ENV DEBIAN_FRONTEND=noninteractive
+# 2. Creiamo la directory di lavoro dentro il container
+WORKDIR /usr/src/app
 
-# Installa ttyd, strumenti di base, git, python3 e pip
-RUN apt-get update && apt-get install -y \
-    ttyd \
-    curl \
-    wget \
-    git \
-    vim \
-    bash \
-    python3 \
-    python3-pip \
-    python3-venv \
-    && rm -rf /var/lib/apt/lists/*
+# 3. Copiamo i file di configurazione delle dipendenze per sfruttare la cache di Docker
+COPY package*.json ./
 
-ENV PORT=10000
+# 4. Installiamo le dipendenze (produzione)
+RUN npm install --only=production
 
-EXPOSE 10000
+# 5. Copiamo tutto il resto del codice sorgente
+COPY . .
 
-# Avvia ttyd abilitando la scrittura (-W) e configurando Xterm.js
-CMD ["sh", "-c", "ttyd -p $PORT -W -t enableZmodem=true -t fontSize=14 bash"]
+# 6. Esponiamo la porta definita nel tuo .env (solitamente 3000)
+EXPOSE 3000
+
+# 7. Comando per avviare l'app
+CMD ["node", "server.js"]
