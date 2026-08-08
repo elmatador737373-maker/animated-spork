@@ -4,23 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nova Shop - Home</title>
+    <link rel="stylesheet" href="/style.css">
     <style>
-        body, html { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background-color: #030000; color: white; overflow-x: hidden; }
-        .lightning-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: radial-gradient(circle, rgba(180,0,0,0.2) 0%, rgba(3,0,0,1) 90%); z-index: -1; animation: flash 4s infinite; }
-        @keyframes flash { 0%, 90%, 96%, 100% { opacity: 0.7; } 92%, 94% { opacity: 1; background: radial-gradient(circle, rgba(255,40,0,0.5) 0%, rgba(30,0,0,1) 90%); } }
-        nav { display: flex; justify-content: space-between; align-items: center; padding: 15px 40px; background: rgba(10,0,0,0.95); border-bottom: 2px solid #ff2a00; }
-        .logo-container { display: flex; align-items: center; gap: 15px; }
-        .logo { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #ff2a00; object-fit: cover; }
-        .nav-links { display: flex; gap: 20px; align-items: center; }
-        .nav-links a { color: white; text-decoration: none; font-weight: bold; transition: 0.2s; }
-        .nav-links a:hover { color: #ff3300; }
-        .btn-discord { background: #5865F2; padding: 8px 16px; border-radius: 6px; display: flex; align-items: center; gap: 8px; }
-        .btn-logout { background: #ff2a00; padding: 6px 12px; border-radius: 5px; font-size: 0.9rem; }
-        .user-profile { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); padding: 5px 15px; border-radius: 20px; border: 1px solid #441111; }
-        .user-profile img { width: 32px; height: 32px; border-radius: 50%; }
-        .hero { text-align: center; padding: 100px 20px; }
-        h1 { color: #ff3300; font-size: 3rem; text-shadow: 0 0 15px rgba(255,50,0,0.6); }
-        .cta-btn { background: #ff2a00; color: white; padding: 15px 30px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 1.2rem; box-shadow: 0 0 15px #ff2a00; display: inline-block; margin-top: 20px; }
+        .hero { text-align: center; padding: 40px 15px; }
+        .hero h1 { font-size: 2.2rem; color: #ff3300; text-shadow: 0 0 15px rgba(255,42,0,0.7); margin-bottom: 10px; }
+        .hero p { color: #ccc; font-size: 1rem; margin-bottom: 25px; }
+        .btn-cta { background: #ff2a00; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 1.1rem; box-shadow: 0 0 15px rgba(255,42,0,0.5); display: inline-block; transition: 0.2s; }
+        .btn-cta:hover { background: #cc2200; }
     </style>
 </head>
 <body>
@@ -28,25 +18,26 @@
     <nav>
         <div class="logo-container">
             <img src="/logo.jpg" alt="Logo" class="logo">
-            <h2 style="margin:0; color: #ff3300;">Nova Shop</h2>
+            <h2>Nova Shop</h2>
         </div>
         <div class="nav-links" id="navLinks">
             <a href="/">Home</a>
             <a href="/products.html">Prodotti</a>
-            <a href="/cart.html">Carrello & Ordini</a>
-            <span id="authArea"><a href="/auth/discord" class="btn-discord">Accedi con Discord</a></span>
+            <a href="/cart.html">Carrello</a>
+            <span id="authArea"><a href="/auth/discord" class="btn-discord">Accedi</a></span>
         </div>
     </nav>
-    <div class="hero">
-        <h1>⚡ Benvenuto su Nova Shop ⚡</h1>
-        <p style="font-size: 1.2rem; color: #ccc;">Il miglior shop online con notifiche istantanee e sicurezza garantita.</p>
-        <a href="/products.html" class="cta-btn">Esplora i Prodotti</a>
+
+    <div class="container hero">
+        <h1>Ben su Nova Shop ⚡</h1>
+        <p>Il negozio digitale definitivo per servizi e prodotti esclusivi. Sicuro, veloce e automatizzato.</p>
+        <a href="/products.html" class="btn-cta">Esplora i Prodotti</a>
     </div>
+
     <script>
         fetch('/api/me').then(res => res.json()).then(({ user, isAdmin }) => {
             if (user) {
-                const authArea = document.getElementById('authArea');
-                authArea.innerHTML = `
+                document.getElementById('authArea').innerHTML = `
                     <div class="user-profile">
                         <img src="https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png" alt="Avatar">
                         <span>${user.username}</span>
@@ -57,8 +48,8 @@
                     const links = document.getElementById('navLinks');
                     const adminLink = document.createElement('a');
                     adminLink.href = '/admin.html';
-                    adminLink.textContent = 'Pannello Admin';
-                    links.insertBefore(adminLink, authArea);
+                    adminLink.textContent = 'Admin';
+                    links.insertBefore(adminLink, document.getElementById('authArea'));
                 }
             }
         });
