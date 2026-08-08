@@ -10,10 +10,7 @@ RUN apt-get update && apt-get install -y \
     bash \
     && rm -rf /var/lib/apt/lists/*
 
-# Copia l'interfaccia personalizzata con i pulsanti
-COPY index.html /index.html
-
 ENV PORT=10000
 
-# Avvia ttyd con l'interfaccia personalizzata (-I /index.html) e permessi di scrittura (-W)
-CMD ["sh", "-c", "ttyd -p $PORT -I /index.html -W bash"]
+# -t enableZmodem=true abilita la barra di stato nativa
+CMD ["sh", "-c", "ttyd -p $PORT -t fontSize=14 -t enableZmodem=true -W bash"]
