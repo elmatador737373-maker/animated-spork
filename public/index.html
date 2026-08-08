@@ -6,7 +6,7 @@
     <title>Nova Shop - Home</title>
     <link rel="stylesheet" href="/style.css">
     <style>
-        .hero { text-align: center; padding: 40px 15px; }
+        .hero { text-align: center; padding: 40px 15px; position: relative; z-index: 2; }
         .hero h1 { font-size: 2.2rem; color: #ff3300; text-shadow: 0 0 15px rgba(255,42,0,0.7); margin-bottom: 10px; }
         .hero p { color: #ccc; font-size: 1rem; margin-bottom: 25px; }
         .btn-cta { background: #ff2a00; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 1.1rem; box-shadow: 0 0 15px rgba(255,42,0,0.5); display: inline-block; transition: 0.2s; }
@@ -14,7 +14,9 @@
     </style>
 </head>
 <body>
-    <div class="lightning-bg"></div>
+    <div class="sky-flash" id="flash"></div>
+    <canvas id="lightningCanvas"></canvas>
+
     <nav>
         <div class="logo-container">
             <img src="/logo.jpg" alt="Logo" class="logo">
@@ -29,7 +31,7 @@
     </nav>
 
     <div class="container hero">
-        <h1>Ben su Nova Shop ⚡</h1>
+        <h1>Benvenuto su Nova Shop ⚡</h1>
         <p>Il negozio digitale definitivo per servizi e prodotti esclusivi. Sicuro, veloce e automatizzato.</p>
         <a href="/products.html" class="btn-cta">Esplora i Prodotti</a>
     </div>
@@ -53,6 +55,114 @@
                 }
             }
         });
+
+        // Script Canvas Fulmini
+        const canvas = document.getElementById('lightningCanvas');
+        const ctx = canvas.getContext('2d');
+        const flashEl = document.getElementById('flash');
+
+        function resizeCanvas() {
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        const config = { segmentLength: 12, growthSpeed: 2, deviation: 22, branchChance: 0.18 };
+        let activeLightnings = [];
+
+        class RealLightning {
+          constructor(startX, startY, angle, isBranch = false, parentWidth = 4) {
+            this.segments = [];
+            this.currentProgress = 0;
+            this.isBranch = isBranch;
+            this.state = "GROWING";
+            this.flickerFrame = 0;
+            this.totalFlickers = 4 + Math.floor(Math.random() * 3);
+            this.opacity = 1;
+            this.lineWidth = isBranch ? parentWidth * 0.5 : parentWidth;
+            this.generatePath(startX, startY, angle);
+          }
+
+          generatePath(x, y, angle) {
+            let curX = x;
+            let curY = y;
+            this.segments.push({ x: curX, y: curY });
+            while (curY < canvas.height && this.segments.length < 80) {
+              const rad = (angle * Math.PI) / 180;
+              const targetX = curX + Math.sin(rad) * config.segmentLength + (Math.random() - 0.5) * config.deviation;
+              const targetY = curY + Math.cos(rad) * config.segmentLength + Math.random() * (config.segmentLength * 0.5);
+              this.segments.push({ x: targetX, y: targetY });
+              curX = targetX;
+              curY = targetY;
+              if (!this.isBranch && Math.random() < config.branchChance) {
+                const branchAngle = angle + (Math.random() > 0.5 ? 45 : -45);
+                activeLightnings.push(new RealLightning(curX, curY, branchAngle, true, this.lineWidth));
+              }
+            }
+          }
+
+          update() {
+            if (this.state === "GROWING") {
+              this.currentProgress += config.growthSpeed;
+              if (this.currentProgress >= this.segments.length) {
+                this.state = this.isBranch ? "FADING" : "STRIKE";
+              }
+            } else if (this.state === "STRIKE") {
+              this.flickerFrame++;
+              if (this.flickerFrame % 2 === 0) {
+                flashEl.style.opacity = (Math.random() * 0.7 + 0.3).toString();
+              } else {
+                flashEl.style.opacity = '0';
+              }
+              if (this.flickerFrame >= this.totalFlickers * 2) {
+                this.state = "FADING";
+                flashEl.style.opacity = '0';
+              }
+            } else if (this.state === "FADING") {
+              this.opacity -= 0.08;
+            }
+          }
+
+          draw() {
+            if (this.opacity <= 0 || this.currentProgress === 0) return;
+            ctx.beginPath();
+            ctx.moveTo(this.segments[0].x, this.segments[0].y);
+            const limit = Math.min(this.currentProgress, this.segments.length);
+            for (let i = 1; i < limit; i++) {
+              ctx.lineTo(this.segments[i].x, this.segments[i].y);
+            }
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            if (this.state === "STRIKE" && this.flickerFrame % 2 !== 0) {
+              ctx.strokeStyle = 'transparent';
+            } else {
+              ctx.strokeStyle = `rgba(255, 240, 240, ${this.opacity})`;
+              ctx.lineWidth = this.state === "STRIKE" ? this.lineWidth * 1.5 : this.lineWidth;
+            }
+            ctx.stroke();
+          }
+        }
+
+        function loop() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          activeLightnings = activeLightnings.filter(l => l.opacity > 0);
+          activeLightnings.forEach(lightning => {
+            lightning.update();
+            lightning.draw();
+          });
+          requestAnimationFrame(loop);
+        }
+
+        function stormController() {
+          const startX = Math.random() * canvas.width;
+          flashEl.style.setProperty('--flash-x', `${(startX / canvas.width) * 100}%`);
+          activeLightnings.push(new RealLightning(startX, 0, 0, false, 4.5));
+          setTimeout(stormController, 1000 + Math.random() * 3500);
+        }
+
+        loop();
+        setTimeout(stormController, 600);
     </script>
 </body>
 </html>
