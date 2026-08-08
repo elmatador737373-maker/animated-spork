@@ -10,8 +10,10 @@ RUN apt-get update && apt-get install -y \
     bash \
     && rm -rf /var/lib/apt/lists/*
 
-# Imposta la porta predefinita per Render
+# Copia l'interfaccia personalizzata con i pulsanti
+COPY index.html /index.html
+
 ENV PORT=10000
 
-# Avvia ttyd collegato a bash sulla porta specificata da Render
-CMD ["sh", "-c", "ttyd -p $PORT -W bash"]
+# Avvia ttyd con l'interfaccia personalizzata (-I /index.html) e permessi di scrittura (-W)
+CMD ["sh", "-c", "ttyd -p $PORT -I /index.html -W bash"]
