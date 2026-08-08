@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Web Terminal</title>
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
+        #terminal { width: 100%; height: 100%; }
+        /* Barra pulsanti fluttuante */
+        .btn-container {
+            position: fixed;
+            top: 10px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            gap: 8px;
+        }
+        .btn-container button {
+            background: #222;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 6px 12px;
+            font-size: 13px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: monospace;
+            transition: 0.2s;
+        }
+        .btn-container button:hover { background: #444; border-color: #888; }
+        .btn-container button:active { background: #666; }
+        .btn-stop { color: #ff6b6b !important; border-color: #ff4d4d !important; }
+    </style>
+</head>
+<body>
+    <div class="btn-container">
+        <button onclick="pasteText()">📋 Incolla</button>
+        <button class="btn-stop" onclick="stopProcess()">🛑 Ferma (CTRL+C)</button>
+        <button onclick="clearTerminal()">🧹 Pulisci</button>
+    </div>
+
+    <!-- ttyd e xterm inseriti automaticamente -->
+    <script>
+        // Funzione per Incollare dagli appunti del browser
+        async function pasteText() {
+            try {
+                const text = await navigator.clipboard.readText();
+                if (window.term) {
+                    window.term.write(text);
+                } else if (window.socket && window.socket.readyState === WebSocket.OPEN) {
+                    window.socket.send(text);
+                }
+            } catch (err) {
+                alert('Impossibile accedere agli appunti. Assicurati di usare HTTPS o di dare i permessi al browser.');
+            }
+        }
+
+        // Funzione per inviare CTRL+C (Codice ASCII \x03)
+        function stopProcess() {
+            if (window.socket && window.socket.readyState === WebSocket.OPEN) {
+                window.socket.send('\x03');
+            }
+        }
+
+        // Funzione per Pulire il terminale
+        function clearTerminal() {
+            if (window.socket && window.socket.readyState === WebSocket.OPEN) {
+                window.socket.send('clear\r');
+            }
+        }
+    </script>
+</body>
+</html>
