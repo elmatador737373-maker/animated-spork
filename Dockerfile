@@ -1,20 +1,20 @@
-# 1. Usiamo una versione stabile di Node.js (Alpine è più leggera)
+# Utilizziamo l'immagine ufficiale e leggera di Node.js
 FROM node:18-alpine
 
-# 2. Creiamo la directory di lavoro dentro il container
-WORKDIR /usr/src/app
+# Imposta la directory di lavoro all'interno del container
+WORKDIR /app
 
-# 3. Copiamo i file di configurazione delle dipendenze per sfruttare la cache di Docker
+# Copia i file delle dipendenze
 COPY package*.json ./
 
-# 4. Installiamo le dipendenze (produzione)
-RUN npm install --only=production
+# Installa le dipendenze per la produzione
+RUN npm ci --only=production
 
-# 5. Copiamo tutto il resto del codice sorgente
+# Copia il resto del codice sorgente del progetto (inclusa la cartella public)
 COPY . .
 
-# 6. Esponiamo la porta definita nel tuo .env (solitamente 3000)
+# Esponi la porta su cui gira l'applicazione Express
 EXPOSE 3000
 
-# 7. Comando per avviare l'app
-CMD ["node", "server.js"]
+# Comando per avviare l'applicazione
+CMD ["npm", "start"]
