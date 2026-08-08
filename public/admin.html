@@ -4,19 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nova Shop - Pannello Admin</title>
-    <link rel="stylesheet" href="/style.css"> <!-- O inserisci lo stile sopra -->
+    <link rel="stylesheet" href="/style.css">
     <style>
         .admin-box { background: rgba(20, 0, 0, 0.9); border: 2px solid #ff2a00; padding: 20px; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 0 20px rgba(255,42,0,0.2); }
-        .admin-box input, .admin-box textarea, .admin-box select { width: 100%; padding: 12px; margin: 8px 0; background: #0d0000; border: 1px solid #551111; color: white; border-radius: 6px; font-size: 1rem; }
-        .btn-submit { background: #ff2a00; color: white; border: none; padding: 12px; font-weight: bold; cursor: pointer; border-radius: 6px; width: 100%; font-size: 1.1rem; box-shadow: 0 0 10px rgba(255,42,0,0.5); transition: 0.2s; }
-        .btn-submit:hover { background: #cc2200; }
-        
+        .admin-box input, .admin-box textarea { width: 100%; padding: 12px; margin: 8px 0; background: #0d0000; border: 1px solid #551111; color: white; border-radius: 6px; font-size: 1rem; }
+        .btn-submit { background: #ff2a00; color: white; border: none; padding: 12px; font-weight: bold; cursor: pointer; border-radius: 6px; width: 100%; font-size: 1.1rem; box-shadow: 0 0 10px rgba(255,42,0,0.5); }
         .product-manage-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 15px; }
         .manage-card { background: rgba(15, 0, 0, 0.85); border: 1px solid #441111; border-radius: 8px; padding: 15px; }
         .manage-card input { width: 100%; padding: 8px; margin: 5px 0; background: #050000; border: 1px solid #331111; color: #fff; border-radius: 4px; font-size: 0.9rem; }
         .btn-group { display: flex; gap: 8px; margin-top: 10px; }
-        .btn-update { background: #00aa55; color: white; border: none; padding: 8px; border-radius: 4px; font-weight: bold; flex: 1; cursor: pointer; font-size: 0.85rem; }
-        .btn-delete { background: #aa0000; color: white; border: none; padding: 8px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.85rem; }
+        .btn-update { background: #00aa55; color: white; border: none; padding: 8px; border-radius: 4px; font-weight: bold; flex: 1; cursor: pointer; }
+        .btn-delete { background: #aa0000; color: white; border: none; padding: 8px; border-radius: 4px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -33,10 +31,8 @@
             <span id="authArea"><a href="/auth/discord" class="btn-discord">Accedi</a></span>
         </div>
     </nav>
-
     <div class="container">
         <h1>🛠️ Pannello Gestione Admin 🛠️</h1>
-        
         <div class="admin-box">
             <h3 style="margin-top:0; color:#ff5533;">➕ Aggiungi Nuovo Prodotto</h3>
             <form id="addProductForm">
@@ -49,13 +45,11 @@
                 <button type="submit" class="btn-submit">Crea Prodotto & Notifica</button>
             </form>
         </div>
-
         <h2 style="color:#ff5533; font-size:1.4rem;">📦 Modifica / Gestisci Stock Esistenti</h2>
         <div id="manageProductsGrid" class="product-manage-grid">
             <p style="text-align:center; width:100%;">Caricamento prodotti...</p>
         </div>
     </div>
-
     <script>
         fetch('/api/me').then(res => res.json()).then(({ user, isAdmin }) => {
             if (!user || !isAdmin) {
@@ -77,7 +71,6 @@
             links.insertBefore(adminLink, document.getElementById('authArea'));
         });
 
-        // Aggiungi Prodotto
         document.getElementById('addProductForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const body = Object.fromEntries(new FormData(e.target).entries());
@@ -95,17 +88,14 @@
             }
         });
 
-        // Carica prodotti per la gestione
         async function loadManageProducts() {
             const res = await fetch('/api/products');
             const products = await res.json();
             const grid = document.getElementById('manageProductsGrid');
-
             if (products.length === 0) {
                 grid.innerHTML = '<p style="text-align:center; width:100%;">Nessun prodotto trovato.</p>';
                 return;
             }
-
             grid.innerHTML = products.map(p => `
                 <div class="manage-card">
                     <form onsubmit="updateProduct(event, ${p.id})">
@@ -130,9 +120,7 @@
 
         async function updateProduct(e, id) {
             e.preventDefault();
-            const formData = new FormData(e.target);
-            const body = Object.fromEntries(formData.entries());
-
+            const body = Object.fromEntries(new FormData(e.target).entries());
             const res = await fetch(`/api/admin/product/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
