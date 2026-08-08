@@ -4,26 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nova Shop - Prodotti</title>
+    <link rel="stylesheet" href="/style.css">
     <style>
-        body, html { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background-color: #030000; color: white; overflow-x: hidden; }
-        .lightning-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: radial-gradient(circle, rgba(180,0,0,0.2) 0%, rgba(3,0,0,1) 90%); z-index: -1; animation: flash 4s infinite; }
-        @keyframes flash { 0%, 90%, 96%, 100% { opacity: 0.7; } 92%, 94% { opacity: 1; background: radial-gradient(circle, rgba(255,40,0,0.5) 0%, rgba(30,0,0,1) 90%); } }
-        nav { display: flex; justify-content: space-between; align-items: center; padding: 15px 40px; background: rgba(10,0,0,0.95); border-bottom: 2px solid #ff2a00; }
-        .logo-container { display: flex; align-items: center; gap: 15px; }
-        .logo { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #ff2a00; object-fit: cover; }
-        .nav-links { display: flex; gap: 20px; align-items: center; }
-        .nav-links a { color: white; text-decoration: none; font-weight: bold; }
-        .btn-discord { background: #5865F2; padding: 8px 16px; border-radius: 6px; display: flex; align-items: center; gap: 8px; }
-        .btn-logout { background: #ff2a00; padding: 6px 12px; border-radius: 5px; font-size: 0.9rem; }
-        .user-profile { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); padding: 5px 15px; border-radius: 20px; border: 1px solid #441111; }
-        .user-profile img { width: 32px; height: 32px; border-radius: 50%; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
-        h1 { text-align: center; color: #ff3300; text-shadow: 0 0 10px rgba(255,50,0,0.5); }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-top: 30px; }
-        .card { background: rgba(20, 0, 0, 0.8); border: 1px solid #ff2a00; border-radius: 10px; padding: 20px; text-align: center; box-shadow: 0 0 15px rgba(255,0,0,0.15); }
-        .card img { width: 100%; height: 180px; object-fit: cover; border-radius: 6px; border: 1px solid #440000; }
-        .btn-buy { background: #ff2a00; color: white; border: none; width: 100%; padding: 10px; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 15px; transition: 0.2s; }
-        .btn-buy:hover { background: #cc2200; box-shadow: 0 0 10px #ff2a00; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-top: 20px; }
+        .card { background: rgba(18, 0, 0, 0.85); border: 1px solid #ff2a00; border-radius: 10px; padding: 15px; text-align: center; box-shadow: 0 0 12px rgba(255,0,0,0.15); display: flex; flex-direction: column; justify-content: space-between; }
+        .card img { width: 100%; height: 160px; object-fit: cover; border-radius: 6px; border: 1px solid #440000; }
+        .card h3 { font-size: 1.1rem; margin: 10px 0 5px; }
+        .card p { font-size: 0.85rem; color: #ccc; margin: 5px 0; }
+        .btn-buy { background: #ff2a00; color: white; border: none; width: 100%; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 1rem; transition: 0.2s; }
+        .btn-buy:active { transform: scale(0.98); }
     </style>
 </head>
 <body>
@@ -31,17 +20,17 @@
     <nav>
         <div class="logo-container">
             <img src="/logo.jpg" alt="Logo" class="logo">
-            <h2 style="margin:0; color: #ff3300;">Nova Shop</h2>
+            <h2>Nova Shop</h2>
         </div>
         <div class="nav-links" id="navLinks">
             <a href="/">Home</a>
             <a href="/products.html">Prodotti</a>
-            <a href="/cart.html">Carrello & Ordini</a>
-            <span id="authArea"><a href="/auth/discord" class="btn-discord">Accedi con Discord</a></span>
+            <a href="/cart.html">Carrello</a>
+            <span id="authArea"><a href="/auth/discord" class="btn-discord">Accedi</a></span>
         </div>
     </nav>
     <div class="container">
-        <h1>⚡ Tutti i Prodotti Disponibili ⚡</h1>
+        <h1>⚡ Vetrina Prodotti ⚡</h1>
         <div id="productGrid" class="grid">
             <p style="text-align:center; width:100%;">Caricamento prodotti...</p>
         </div>
@@ -49,8 +38,7 @@
     <script>
         fetch('/api/me').then(res => res.json()).then(({ user, isAdmin }) => {
             if (user) {
-                const authArea = document.getElementById('authArea');
-                authArea.innerHTML = `
+                document.getElementById('authArea').innerHTML = `
                     <div class="user-profile">
                         <img src="https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png" alt="Avatar">
                         <span>${user.username}</span>
@@ -61,8 +49,8 @@
                     const links = document.getElementById('navLinks');
                     const adminLink = document.createElement('a');
                     adminLink.href = '/admin.html';
-                    adminLink.textContent = 'Pannello Admin';
-                    links.insertBefore(adminLink, authArea);
+                    adminLink.textContent = 'Admin';
+                    links.insertBefore(adminLink, document.getElementById('authArea'));
                 }
             }
         });
@@ -74,14 +62,18 @@
             } else {
                 grid.innerHTML = products.map(p => `
                     <div class="card">
-                        <img src="${p.image}" alt="${p.name}">
-                        <h3>${p.name} ${p.variant ? '('+p.variant+')' : ''}</h3>
-                        <p style="color: #ccc; font-size: 0.9rem;">${p.description || ''}</p>
-                        <p><strong>Stock:</strong> ${p.stock > 0 ? p.stock + ' disponibili' : 'Esaurito'}</p>
-                        <p style="font-size: 1.2rem; color: #ff4400;"><strong>€${p.price}</strong></p>
-                        <button class="btn-buy" onclick="buy(${p.id}, '${p.name}', ${p.price})" ${p.stock <= 0 ? 'disabled style="background:#444;cursor:not-allowed;"' : ''}>
-                            ${p.stock > 0 ? 'Acquista Ora' : 'Esaurito'}
-                        </button>
+                        <div>
+                            <img src="${p.image}" alt="${p.name}">
+                            <h3>${p.name} ${p.variant ? '('+p.variant+')' : ''}</h3>
+                            <p>${p.description || ''}</p>
+                        </div>
+                        <div>
+                            <p><strong>Stock:</strong> ${p.stock > 0 ? p.stock + ' disponibili' : 'Esaurito'}</p>
+                            <p style="font-size: 1.2rem; color: #ff4400; font-weight: bold;">€${p.price}</p>
+                            <button class="btn-buy" onclick="buy(${p.id}, '${p.name}', ${p.price})" ${p.stock <= 0 ? 'disabled style="background:#333;cursor:not-allowed;"' : ''}>
+                                ${p.stock > 0 ? 'Acquista Ora' : 'Esaurito'}
+                            </button>
+                        </div>
                     </div>
                 `).join('');
             }
@@ -95,7 +87,7 @@
             });
             const data = await res.json();
             if(data.success) {
-                alert('Ordine effettuato! L\'ordine è in attesa di pagamento. Apri subito un ticket nel server Discord: https://discord.gg/ACX7HmxHnQ');
+                alert('Ordine effettuato! Unisciti al server Discord per completare il pagamento tramite ticket.');
                 window.location.href = 'https://discord.gg/ACX7HmxHnQ';
             } else {
                 alert('Errore: ' + (data.error || 'Devi fare il login!'));
