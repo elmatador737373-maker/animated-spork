@@ -22,22 +22,22 @@
             height: 100%;
             pointer-events: none;
             z-index: 0;
-            opacity: 0.45;
+            opacity: 0.9;
         }
 
         .glow-sphere {
             position: fixed;
-            width: 500px;
-            height: 500px;
-            background: radial-gradient(circle, rgba(220, 38, 38, 0.2) 0%, transparent 70%);
+            width: 650px;
+            height: 650px;
+            background: radial-gradient(circle, rgba(255, 34, 0, 0.25) 0%, transparent 70%);
             border-radius: 50%;
             pointer-events: none;
             z-index: 0;
-            filter: blur(60px);
+            filter: blur(90px);
         }
 
-        .neon-text-red {
-            text-shadow: 0 0 10px rgba(239, 68, 68, 0.8), 0 0 20px rgba(220, 38, 38, 0.5), 0 0 40px rgba(220, 38, 38, 0.3);
+        .neon-fire {
+            text-shadow: 0 0 15px rgba(255, 34, 0, 0.95), 0 0 30px rgba(255, 51, 51, 0.7), 0 0 60px rgba(255, 0, 0, 0.5);
         }
 
         .laser-top {
@@ -46,9 +46,9 @@
             left: 0;
             width: 100%;
             height: 3px;
-            background: linear-gradient(90deg, transparent, #ef4444, #ff0055, #ef4444, transparent);
+            background: linear-gradient(90deg, transparent, #ff2200, #ff7700, #ff2200, transparent);
             z-index: 100;
-            box-shadow: 0 0 15px #ef4444;
+            box-shadow: 0 0 25px #ff2200;
         }
     </style>
 </head>
@@ -57,17 +57,17 @@
     <div class="laser-top"></div>
     <canvas id="lightning-canvas"></canvas>
 
-    <div class="glow-sphere" style="top: -100px; left: -100px;"></div>
-    <div class="glow-sphere" style="bottom: -100px; right: -100px;"></div>
+    <div class="glow-sphere" style="top: -180px; left: -180px;"></div>
+    <div class="glow-sphere" style="bottom: -180px; right: -180px;"></div>
 
     <!-- NAVBAR -->
-    <header class="bg-slate-950/80 backdrop-blur-xl border-b border-red-950/40 sticky top-0 z-50 py-3.5 px-4 sm:px-8 flex justify-between items-center shadow-2xl">
+    <header class="bg-slate-950/85 backdrop-blur-xl border-b border-red-950/40 sticky top-0 z-50 py-3.5 px-4 sm:px-8 flex justify-between items-center shadow-2xl">
         <a href="/" class="flex items-center gap-3 group z-10">
-            <div class="w-11 h-11 rounded-xl overflow-hidden border-2 border-red-500/50 shadow-lg shadow-red-600/40 bg-slate-900 flex items-center justify-center">
-                <img src="/logo.png" alt="Logo" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fa-solid fa-bolt-lightning text-red-500 text-xl\'></i>';">
+            <div class="w-11 h-11 rounded-xl overflow-hidden border-2 border-[#ff2200]/60 shadow-lg shadow-[#ff2200]/40 bg-slate-900 flex items-center justify-center">
+                <img src="/logo.jpg" alt="Logo" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fa-solid fa-bolt-lightning text-[#ff2200] text-xl\'></i>';">
             </div>
             <span class="text-lg sm:text-xl font-black tracking-wider text-white">
-                NOVA<span class="text-red-500 neon-text-red">SHOP</span>
+                NOVA<span class="text-[#ff2200] neon-fire">SHOP</span>
             </span>
         </a>
 
@@ -80,12 +80,12 @@
 
     <!-- MAIN CONTENT -->
     <main class="flex-grow container mx-auto px-4 py-8 sm:py-12 max-w-4xl relative z-10">
-        <a href="/" class="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-400 hover:text-red-400 mb-6 transition">
+        <a href="/" class="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-400 hover:text-[#ff2200] mb-6 transition">
             <i class="fa-solid fa-arrow-left"></i> Torna al catalogo
         </a>
 
         <div id="loading" class="text-center py-20 text-slate-500">
-            <i class="fa-solid fa-bolt fa-spin text-3xl mb-3 text-red-600"></i>
+            <i class="fa-solid fa-bolt fa-spin text-3xl mb-3 text-[#ff2200]"></i>
             <p class="text-xs sm:text-sm">Caricamento dettagli prodotto...</p>
         </div>
 
@@ -101,11 +101,11 @@
             <!-- Info e Acquisto -->
             <div class="flex flex-col justify-between">
                 <div>
-                    <span id="p-variant" class="text-[10px] font-extrabold text-red-400 uppercase tracking-widest bg-red-500/10 px-2.5 py-1 rounded border border-red-500/20">Standard</span>
+                    <span id="p-variant" class="text-[10px] font-extrabold text-[#ff2200] uppercase tracking-widest bg-red-500/10 px-2.5 py-1 rounded border border-red-500/20">Standard</span>
                     <h1 id="p-name" class="text-2xl sm:text-3xl font-black text-white mt-3 mb-2 leading-tight">Nome Prodotto</h1>
                     <p id="p-desc" class="text-slate-400 text-xs sm:text-sm leading-relaxed mb-6">Descrizione del prodotto...</p>
                     <div class="text-xs text-slate-400 mb-6 flex items-center gap-2">
-                        <i class="fa-solid fa-box text-red-500"></i> Stock disponibile: <span id="p-stock" class="font-bold text-white">0</span>
+                        <i class="fa-solid fa-box text-[#ff2200]"></i> Stock disponibile: <span id="p-stock" class="font-bold text-white">0</span>
                     </div>
                 </div>
 
@@ -122,7 +122,7 @@
         <p>&copy; 2026 Nova Shop &bull; Secure Discord Integration</p>
     </footer>
 
-    <!-- SCRIPT FULMINI + LOGICA PRODOTTO -->
+    <!-- SCRIPT FULMINI E LOGICA PRODOTTO -->
     <script>
         const canvas = document.getElementById('lightning-canvas');
         const ctx = canvas.getContext('2d');
@@ -135,7 +135,7 @@
         window.addEventListener('resize', resize);
         resize();
 
-        class Bolt {
+        class ElectricBolt {
             constructor() {
                 this.reset();
             }
@@ -143,17 +143,16 @@
                 this.x = Math.random() * width;
                 this.y = 0;
                 this.path = [{x: this.x, y: this.y}];
-                this.length = Math.floor(Math.random() * 8) + 5;
-                this.maxAlpha = Math.random() * 0.7 + 0.3;
-                this.alpha = this.maxAlpha;
+                this.segments = Math.floor(Math.random() * 12) + 8;
+                this.alpha = 1.0;
                 this.dead = false;
 
-                let currentX = this.x;
-                let currentY = 0;
-                for(let i=0; i<this.length; i++) {
-                    currentX += (Math.random() - 0.5) * 80;
-                    currentY += Math.random() * (height / this.length);
-                    this.path.push({x: currentX, y: currentY});
+                let cx = this.x;
+                let cy = 0;
+                for(let i=0; i<this.segments; i++) {
+                    cx += (Math.random() - 0.5) * 140;
+                    cy += height / this.segments;
+                    this.path.push({x: cx, y: cy});
                 }
             }
             draw() {
@@ -162,13 +161,17 @@
                 for(let p of this.path) {
                     ctx.lineTo(p.x, p.y);
                 }
-                ctx.strokeStyle = `rgba(239, 68, 68, ${this.alpha})`;
-                ctx.lineWidth = 2;
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = '#ef4444';
+                ctx.strokeStyle = `rgba(255, 34, 0, ${this.alpha})`;
+                ctx.lineWidth = 3;
+                ctx.shadowBlur = 30;
+                ctx.shadowColor = '#ff2200';
+                ctx.stroke();
+
+                ctx.strokeStyle = `rgba(255, 255, 255, ${this.alpha * 0.9})`;
+                ctx.lineWidth = 1;
                 ctx.stroke();
                 
-                this.alpha -= 0.08;
+                this.alpha -= 0.1;
                 if(this.alpha <= 0) this.dead = true;
             }
         }
@@ -176,8 +179,8 @@
         let bolts = [];
         function animate() {
             ctx.clearRect(0, 0, width, height);
-            if(Math.random() < 0.08 && bolts.length < 3) {
-                bolts.push(new Bolt());
+            if(Math.random() < 0.15 && bolts.length < 5) {
+                bolts.push(new ElectricBolt());
             }
             for(let i = bolts.length - 1; i >= 0; i--) {
                 bolts[i].draw();
@@ -253,7 +256,7 @@
                     `;
                 } else {
                     buySection.innerHTML = `
-                        <button onclick="buyProduct(${product.id})" class="w-full bg-gradient-to-r from-red-600 via-rose-600 to-red-700 hover:from-red-500 hover:to-rose-500 text-white font-bold py-3.5 px-4 rounded-xl transition shadow-xl shadow-red-600/30 text-sm flex items-center justify-center gap-2">
+                        <button onclick="buyProduct(${product.id})" class="w-full bg-gradient-to-r from-[#ff2200] via-rose-600 to-red-700 hover:from-red-600 hover:to-rose-500 text-white font-bold py-3.5 px-4 rounded-xl transition shadow-xl shadow-red-600/30 text-sm flex items-center justify-center gap-2">
                             <i class="fa-solid fa-bag-shopping"></i> Conferma e Acquista Ora
                         </button>
                     `;
