@@ -6,7 +6,7 @@ import time
 import requests
 from flask import Flask
 
-# Inserisci il tuo Webhook in chiaro qui sotto
+# Inserisci il tuo Webhook qui sotto
 DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1538940427636449391/wTrHhBcyLy9FbXJ8NqTJ6DgvyhQ-m_Ar1RRcbZQtbujizHP8JtyDDlnNZpsmlwA-tWiK"
 
 app = Flask(__name__)
@@ -14,7 +14,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def home():
-    """Endpoint di controllo richiesto da Render."""
+    """Endpoint di controllo per la health-check di Render."""
     return "Bot status: Running", 200
 
 
@@ -68,6 +68,9 @@ def worker_loop():
 
 
 if __name__ == "__main__":
+    # Test immediato del Webhook all'avvio dello script
+    send_to_discord("🚀 **Bot avviato su Render**: Test connessione Webhook riuscito!")
+
     # Avvia il loop dei codici in background
     threading.Thread(target=worker_loop, daemon=True).start()
 
