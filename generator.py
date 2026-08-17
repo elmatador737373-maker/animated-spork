@@ -50,14 +50,19 @@ def send_request(code):
         elif response.status_code == 429:  # Rate Limit
             retry_after = response.json().get("retry_after", 5000)
             wait_seconds = (retry_after / 1000) + 1
-            print(f"Rate limited! Attesa di {wait_seconds:.2f} secondi...")
-            time.sleep(wait_seconds)
+            msg = f"⚠️ **Rate Limit raggiunto!** Attesa di {wait_seconds:.2f} secondi..."
+            print(msg)
+            send_to_discord(msg)
 
         else:
-            print(f"Codice non valido ({response.status_code}).")
+            msg = f"❌ Codice non valido ({response.status_code}): {code}"
+            print(msg)
+            send_to_discord(msg)  # <--- Invia il messaggio anche per i codici falliti
 
     except Exception as e:
-        print(f"Errore durante la richiesta API: {e}")
+        msg = f"⚠️ Errore durante la richiesta API per {code}: {e}"
+        print(msg)
+        send_to_discord(msg)
 
 
 def worker_loop():
